@@ -19,8 +19,9 @@ public class BeatWindowLogic : MonoBehaviour, IEasyListener
     public float perfectThreshold = 0.05f;
     public float goodThreshold = 0.125f;
     [Header("Cooldown Settings")]
-    public float cooldownDuration = 0.5f;
-    private readonly Dictionary<string, float> cooldowns = new Dictionary<string, float>();
+    public float cooldownDuration = 0.4f;
+    private readonly Dictionary<string, float> cooldowns = new();
+    private readonly Dictionary<string, int> cooldownBeats = new();
     private readonly List<float> beatTimelinePositions = new List<float>();
     private float initialOffset;
     private float lastBeatTime;
@@ -48,9 +49,10 @@ public class BeatWindowLogic : MonoBehaviour, IEasyListener
     {
         foreach (var id in cooldowns.Keys.ToList())
         {
-            if (Time.time - cooldowns[id] >= cooldownDuration || audioEvent.CurrentBeat > lastBeat)
+            if (Time.time - cooldowns[id] >= cooldownDuration || audioEvent.CurrentBeat > cooldownBeats[id])
             {
                 cooldowns.Remove(id);
+                cooldownBeats.Remove(id);
             }
         }
     }
@@ -64,29 +66,27 @@ public class BeatWindowLogic : MonoBehaviour, IEasyListener
 
         // Update the last beat time
         lastBeatTime = nextBeatTime;
+        foreach (var id in cooldowns.Keys.ToList())
+        {
+            cooldownBeats[id] = audioEvent.CurrentBeat;
+        }
         lastBeat = audioEvent.CurrentBeat;
     }
 
     // Define the beat result event
     public event BeatResultEventHandler BeatResultEvent;
 
-    public BeatResult GetBeatResult(string cooldownID = null, bool notify = true)
+    public BeatResult GetBeatResult(string id = "", bool notify = true)
     {
-        if (string.IsNullOrEmpty(cooldownID))
-        {
-            // If id is null or empty, applyCooldown is false
-            NotifyBeatResult(BeatResult.Mashed);
-            return BeatResult.Mashed;
-        }
-
         // Get accuracy based on the closest beat
         var timingAccuracy = Mathf.Abs(Time.time - FindClosestBeat());
         var beatResult = DetermineBeatType(timingAccuracy);
 
         // Anti spam
-        if (!cooldowns.ContainsKey(cooldownID))
+        if (!cooldowns.ContainsKey(id))
         {
-            cooldowns[cooldownID] = Time.time;
+            cooldowns[id] = Time.time;
+            cooldownBeats.Add(id, lastBeat);
         }
         else
         {
