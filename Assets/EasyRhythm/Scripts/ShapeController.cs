@@ -1,29 +1,26 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using System;
-using UnityEngine.UI;
 
 /// <summary>
-/// An example class for how to use EasyRhythm for FMOD.
-/// First, we have to add the interface IEasyListener so we can use the OnBeat and Marker methods.
+///     An example class for how to use EasyRhythm for FMOD.
+///     First, we have to add the interface IEasyListener so we can use the OnBeat and Marker methods.
 /// </summary>
 public class ShapeController : MonoBehaviour, IEasyListener
 {
     // SHAPE CONTROL
 
     // We will animate a cube using callbacks from the FMOD event (myAudioEvent)
-    public GameObject cube; 
+    public GameObject cube;
     public float animTime = 0.1f;
-    private float timer = 0;
     public float scaleSpeed = 0.05f;
 
     public Color[] cubeColors;
-    private int currentColor = 0;
 
     public GameObject sphere;
     public GameObject cylinder;
     public Mesh capsule;
+    private int currentColor;
+    private float timer;
 
     public void Update()
     {
@@ -37,14 +34,18 @@ public class ShapeController : MonoBehaviour, IEasyListener
         {
             ToggleCubeColor();
             StartCoroutine(AnimateCube());
-            
-        }   
-        
+        }
+
         if (audioEvent.CurrentBeat == 1)
         {
             StartCoroutine(AnimateSphere(audioEvent));
             StartCoroutine(AnimateCylinder(audioEvent));
         }
+    }
+
+    public void OnTick(EasyEvent currentAudioEvent)
+    {
+        // do nothing
     }
 
     public void ToggleCubeColor()
@@ -70,7 +71,7 @@ public class ShapeController : MonoBehaviour, IEasyListener
 
         timer += Time.deltaTime; // A timer for the cube animation
 
-        var cubeTrans = cube.transform;
+        Transform cubeTrans = cube.transform;
         Vector3 newScale = cube.transform.localScale;
         float cubeSize = cube.transform.localScale.x;
 
@@ -85,10 +86,10 @@ public class ShapeController : MonoBehaviour, IEasyListener
 
     private IEnumerator AnimateSphere(EasyEvent audioEvent)
     {
-        var journeyTime = audioEvent.BeatLength() * 2;
+        float journeyTime = audioEvent.BeatLength() * 2;
 
-        var minSize = Vector3.one;
-        var maxSize = Vector3.one * 1.5f;
+        Vector3 minSize = Vector3.one;
+        Vector3 maxSize = Vector3.one * 1.5f;
 
         sphere.transform.localScale = minSize;
 
@@ -102,7 +103,7 @@ public class ShapeController : MonoBehaviour, IEasyListener
             timeSinceStarted = Time.time - startTime;
             percentageComplete = timeSinceStarted / journeyTime;
 
-            var newSize = Vector3.SlerpUnclamped(minSize, maxSize, percentageComplete);
+            Vector3 newSize = Vector3.SlerpUnclamped(minSize, maxSize, percentageComplete);
 
             sphere.transform.localScale = newSize;
             yield return null;
@@ -116,7 +117,7 @@ public class ShapeController : MonoBehaviour, IEasyListener
             timeSinceStarted = Time.time - startTime;
             percentageComplete = timeSinceStarted / journeyTime;
 
-            var newSize = Vector3.SlerpUnclamped(maxSize, minSize, percentageComplete);
+            Vector3 newSize = Vector3.SlerpUnclamped(maxSize, minSize, percentageComplete);
 
             sphere.transform.localScale = newSize;
             yield return null;
@@ -125,11 +126,11 @@ public class ShapeController : MonoBehaviour, IEasyListener
 
     private IEnumerator AnimateCylinder(EasyEvent audioEvent)
     {
-        var journeyTime = audioEvent.BeatLength();
+        float journeyTime = audioEvent.BeatLength();
 
-        var elapsedTime = 0f;
+        float elapsedTime = 0f;
 
-        var currentRotation = cylinder.transform.rotation;
+        Quaternion currentRotation = cylinder.transform.rotation;
 
         float startTime = Time.time;
 
@@ -141,17 +142,13 @@ public class ShapeController : MonoBehaviour, IEasyListener
             timeSinceStarted = Time.time - startTime;
             percentageComplete = timeSinceStarted / journeyTime;
 
-            var zRotation = Mathf.Lerp(currentRotation.eulerAngles.z, currentRotation.eulerAngles.z - 90, percentageComplete);
+            float zRotation = Mathf.Lerp(currentRotation.eulerAngles.z, currentRotation.eulerAngles.z - 90,
+                percentageComplete);
 
             cylinder.transform.rotation = Quaternion.Euler(0, 0, zRotation);
 
             elapsedTime += Time.deltaTime / journeyTime;
             yield return null;
         }
-    }
-
-    public void OnTick(EasyEvent currentAudioEvent)
-    {
-        // do nothing
     }
 }

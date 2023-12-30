@@ -1,17 +1,20 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+
 /// <summary>
-/// Attribute that require implementation of the provided interface.
+///     Attribute that require implementation of the provided interface.
 /// </summary>
 public class RequireInterfaceAttribute : PropertyAttribute
 {
-    // Interface type.
-    public System.Type requiredType { get; private set; }
     /// <summary>
-    /// Requiring implementation of the <see cref="T:RequireInterfaceAttribute"/> interface.
+    ///     Requiring implementation of the <see cref="T:RequireInterfaceAttribute" /> interface.
     /// </summary>
     /// <param name="type">Interface type.</param>
-    public RequireInterfaceAttribute(System.Type type)
+    public RequireInterfaceAttribute(Type type)
     {
-        this.requiredType = type;
+        requiredType = type;
     }
+
+    // Interface type.
+    public Type requiredType { get; private set; }
 }

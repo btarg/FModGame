@@ -556,6 +556,7 @@ GameObject:
   - component: {fileID: 963194228}
   - component: {fileID: 963194227}
   - component: {fileID: 963194229}
+  - component: {fileID: 963194230}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -642,24 +643,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attenuationObject: {fileID: 0}
---- !u!114 &1202232206
+--- !u!114 &963194230
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5623344310883459379}
+  m_GameObject: {fileID: 963194225}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6473d43a96ea4b56ba3568476cf852cd, type: 3}
+  m_Script: {fileID: 11500000, guid: 9d1b3e8f2df749fc8522f84d181ef54d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  perfectThreshold: 0.025
-  goodThreshold: 0.125
-  lastKeyPressTime: 0
-  cooldownDuration: 0.5
-  maxKeyPressIntervalsToTrack: 2
-  maxAllowedKeyPressInterval: 1
 --- !u!114 &1202232207
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -672,7 +667,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f06ddea72d3b4668915795f89a838f44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myEventPath:
+  defaultMusicPath:
     Guid:
       Data1: -1229948416
       Data2: 1237027029
@@ -680,8 +675,8 @@ MonoBehaviour:
       Data4: -392670314
     Path: event:/TestMusic
   listeners:
-  - {fileID: 1202232206}
   - {fileID: 3016877429124664003}
+  - {fileID: 574233014}
   - {fileID: 574233014}
 --- !u!1001 &1493554619
 PrefabInstance:
@@ -860,8 +855,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5623344310883459378}
-  - component: {fileID: 1202232206}
   - component: {fileID: 1202232207}
+  - component: {fileID: 5623344310883459381}
   - component: {fileID: 5623344310883459380}
   m_Layer: 0
   m_Name: Audio Manager
@@ -879,7 +874,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 5623344310883459379}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d1b3e8f2df749fc8522f84d181ef54d, type: 3}
+  m_Script: {fileID: 11500000, guid: 6473d43a96ea4b56ba3568476cf852cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  perfectThreshold: 0.05
+  goodThreshold: 0.125
+  cooldownDuration: 0.4
+--- !u!114 &5623344310883459381
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5623344310883459379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bab24e0ba3dfcc4c96d3c12008f843c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
