@@ -2,6 +2,7 @@
     "name": "Project.Player",
     "rootNamespace": "",
     "references": [
+        "GUID:006f956817ada3c489e0dd0539f7a208",
         "GUID:75469ad4d38634e559750d17036d5f7c",
         "GUID:4307f53044263cf4b835bd812fc161a4",
         "GUID:3b6fce31bedde8846820f579040b86ed"
