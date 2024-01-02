@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Cinemachine;
+using DG.Tweening;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(Animator))]
@@ -12,11 +14,16 @@ public class PlayerController : MonoBehaviour
     Animator animator;
     bool isMoving;
     bool isRunPressed;
+    bool isRunning;
 
     [Header("Movement Settings")]
-    public float rotationFactorPerFrame = 1.0f;
-    public float runMultiplier = 3.0f;
+    public float rotationFactorPerFrame = 1f;
     public float movementThreshold = 0.1f;
+    public float acceleration = 10f;
+    public float deceleration = 20f;
+    private float maxSpeed = 0.0f;
+    public float maxWalkSpeed = 6.0f;
+    public float maxRunSpeed = 10.0f;
 
     [Header("Gravity Settings")]
     public float gravity = -9.81f;
@@ -25,12 +32,20 @@ public class PlayerController : MonoBehaviour
     [Header("Falling Settings")]
     public float groundDistanceThreshold = 3f;
 
+    [Header("Camera Settings")]
+    public float normalFOV = 40f;
+    public float runningFOV = 45f;
+    public float fovChangeDuration = 0.5f;
+
     public bool enableInput = true;
+    private float currentSpeed;
 
     // Hashes for animator parameters
     int isWalkingHash;
     int isRunningHash;
     int isFallingHash;
+
+    Vector3 lastMovementDirection;
 
     private void Awake()
     {
@@ -54,58 +69,64 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        cameraRelativeMovement = ConvertToCameraSpace(new Vector3(currentMovementInput.x, 0, currentMovementInput.y));
-        if (characterController.isGrounded)
-        {
-            // Apply a small downward force when the character is grounded
-            cameraRelativeMovement.y = groundedGravity;
-        }
-        else
-        {
-            cameraRelativeMovement.y += gravity;
-        }
+        Vector3 horizontalMovement = ConvertToCameraSpace(new Vector3(currentMovementInput.x, 0, currentMovementInput.y));
+        lastMovementDirection = horizontalMovement.magnitude > 0 ? horizontalMovement : lastMovementDirection;
+
+        float verticalMovement = characterController.isGrounded ? groundedGravity : gravity * Time.deltaTime;
+        isRunning = isRunPressed && currentMovementInput.magnitude >= 0.9f;
 
         HandleAnimation();
         HandleRotation();
 
-        // Apply runMultiplier only when the character is grounded and not falling
-        float speedMultiplier = characterController.isGrounded && isRunPressed ? runMultiplier : 1;
-        characterController.Move(cameraRelativeMovement * speedMultiplier * Time.deltaTime);
+        maxSpeed = isRunning ? maxRunSpeed : maxWalkSpeed;
+
+        if (!IsFalling())
+        {
+            currentSpeed = isMoving
+                ? Mathf.Min(currentSpeed + acceleration * Time.deltaTime, maxSpeed)
+                : Mathf.Max(currentSpeed - deceleration * Time.deltaTime, 0);
+        }
+
+        cameraRelativeMovement = lastMovementDirection * currentSpeed * Time.deltaTime;
+        cameraRelativeMovement.y = verticalMovement;
+        characterController.Move(cameraRelativeMovement);
+
+        // Get the reference to the CinemachineVirtualCamera at runtime
+        CinemachineFreeLook virtualCamera = Camera.main.gameObject.GetComponent<CinemachineBrain>().ActiveVirtualCamera as CinemachineFreeLook;
+
+        // Change FOV based on running or walking
+        if (virtualCamera != null)
+        {
+            float targetFOV = (isRunPressed && isMoving && !IsFalling()) ? runningFOV : normalFOV;
+            DOTween.To(() => virtualCamera.m_Lens.FieldOfView, x => virtualCamera.m_Lens.FieldOfView = x, targetFOV, fovChangeDuration);
+        }
+        else
+        {
+            Debug.LogWarning("CinemachineVirtualCamera component is not found in the main camera.");
+        }
     }
 
     private bool IsFalling()
     {
-        RaycastHit hit;
-        if (Physics.Raycast(transform.position, -Vector3.up, out hit))
-        {
-            return hit.distance > groundDistanceThreshold;
-        }
-        return false;
+        bool isGroundBelow = Physics.Raycast(transform.position, -Vector3.up, out RaycastHit hit);
+        return !characterController.isGrounded && (!isGroundBelow || hit.distance > groundDistanceThreshold);
     }
 
     Vector3 ConvertToCameraSpace(Vector3 input)
     {
-        float currentYValue = input.y;
         Vector3 cameraForward = Camera.main.transform.forward;
         Vector3 cameraRight = Camera.main.transform.right;
 
         cameraForward.y = 0;
         cameraRight.y = 0;
 
-        cameraForward = cameraForward.normalized;
-        cameraRight = cameraRight.normalized;
-
-        Vector3 cameraForwardZProduct = input.z * cameraForward;
-        Vector3 cameraRightXProduct = input.x * cameraRight;
-        Vector3 result = cameraForwardZProduct + cameraRightXProduct;
-        result.y = currentYValue;
-        return result;
+        return (input.z * cameraForward.normalized) + (input.x * cameraRight.normalized);
     }
 
     private void HandleAnimation()
     {
-        animator.SetBool(isWalkingHash, isMoving && !isRunPressed && !IsFalling());
-        animator.SetBool(isRunningHash, isMoving && isRunPressed && !IsFalling());
+        animator.SetBool(isWalkingHash, isMoving && !isRunning);
+        animator.SetBool(isRunningHash, isMoving && isRunning);
         animator.SetBool(isFallingHash, IsFalling());
     }
 
@@ -116,15 +137,9 @@ public class PlayerController : MonoBehaviour
 
     private void HandleRotation()
     {
-        // Only rotate when there is movement input and the player is not falling
         if (isMoving && !IsFalling() && enableInput)
         {
-            // Use cameraRelativeMovement instead of currentMovementInput
-            Vector3 positionToLookAt;
-            positionToLookAt.x = cameraRelativeMovement.x;
-            positionToLookAt.y = 0;
-            positionToLookAt.z = cameraRelativeMovement.z;
-
+            Vector3 positionToLookAt = new(cameraRelativeMovement.x, 0, cameraRelativeMovement.z);
             Quaternion targetRotation = Quaternion.LookRotation(positionToLookAt);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationFactorPerFrame * Time.deltaTime);
         }
@@ -132,11 +147,14 @@ public class PlayerController : MonoBehaviour
 
     private void OnMovementInput(InputAction.CallbackContext ctx)
     {
-        // Ignore movement input when the player is falling
         if (!IsFalling() && enableInput)
         {
             currentMovementInput = ctx.ReadValue<Vector2>();
             isMoving = currentMovementInput.magnitude > movementThreshold;
+        }
+        else
+        {
+            isMoving = false;
         }
     }
 
