@@ -156,6 +156,54 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""Debug"",
+            ""id"": ""15a5a2fb-7105-4f80-8b14-1f269d067401"",
+            ""actions"": [
+                {
+                    ""name"": ""BattleState"",
+                    ""type"": ""Button"",
+                    ""id"": ""56ea8f03-771b-43c8-b35e-ad9d89b11c09"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""KillAllEnemies"",
+                    ""type"": ""Button"",
+                    ""id"": ""153fbd16-df1e-4569-922b-6d730383a01f"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""88447071-5d46-4b28-9c8c-691e76c54437"",
+                    ""path"": ""<Keyboard>/enter"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""BattleState"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1e562240-55af-4cb8-93aa-9b1d7a99e557"",
+                    ""path"": ""<Keyboard>/delete"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""KillAllEnemies"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -165,6 +213,10 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         m_CharacterControls_Move = m_CharacterControls.FindAction("Move", throwIfNotFound: true);
         m_CharacterControls_Run = m_CharacterControls.FindAction("Run", throwIfNotFound: true);
         m_CharacterControls_Camera = m_CharacterControls.FindAction("Camera", throwIfNotFound: true);
+        // Debug
+        m_Debug = asset.FindActionMap("Debug", throwIfNotFound: true);
+        m_Debug_BattleState = m_Debug.FindAction("BattleState", throwIfNotFound: true);
+        m_Debug_KillAllEnemies = m_Debug.FindAction("KillAllEnemies", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -284,10 +336,69 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         }
     }
     public CharacterControlsActions @CharacterControls => new CharacterControlsActions(this);
+
+    // Debug
+    private readonly InputActionMap m_Debug;
+    private List<IDebugActions> m_DebugActionsCallbackInterfaces = new List<IDebugActions>();
+    private readonly InputAction m_Debug_BattleState;
+    private readonly InputAction m_Debug_KillAllEnemies;
+    public struct DebugActions
+    {
+        private @PlayerInput m_Wrapper;
+        public DebugActions(@PlayerInput wrapper) { m_Wrapper = wrapper; }
+        public InputAction @BattleState => m_Wrapper.m_Debug_BattleState;
+        public InputAction @KillAllEnemies => m_Wrapper.m_Debug_KillAllEnemies;
+        public InputActionMap Get() { return m_Wrapper.m_Debug; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(DebugActions set) { return set.Get(); }
+        public void AddCallbacks(IDebugActions instance)
+        {
+            if (instance == null || m_Wrapper.m_DebugActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_DebugActionsCallbackInterfaces.Add(instance);
+            @BattleState.started += instance.OnBattleState;
+            @BattleState.performed += instance.OnBattleState;
+            @BattleState.canceled += instance.OnBattleState;
+            @KillAllEnemies.started += instance.OnKillAllEnemies;
+            @KillAllEnemies.performed += instance.OnKillAllEnemies;
+            @KillAllEnemies.canceled += instance.OnKillAllEnemies;
+        }
+
+        private void UnregisterCallbacks(IDebugActions instance)
+        {
+            @BattleState.started -= instance.OnBattleState;
+            @BattleState.performed -= instance.OnBattleState;
+            @BattleState.canceled -= instance.OnBattleState;
+            @KillAllEnemies.started -= instance.OnKillAllEnemies;
+            @KillAllEnemies.performed -= instance.OnKillAllEnemies;
+            @KillAllEnemies.canceled -= instance.OnKillAllEnemies;
+        }
+
+        public void RemoveCallbacks(IDebugActions instance)
+        {
+            if (m_Wrapper.m_DebugActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        public void SetCallbacks(IDebugActions instance)
+        {
+            foreach (var item in m_Wrapper.m_DebugActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_DebugActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    public DebugActions @Debug => new DebugActions(this);
     public interface ICharacterControlsActions
     {
         void OnMove(InputAction.CallbackContext context);
         void OnRun(InputAction.CallbackContext context);
         void OnCamera(InputAction.CallbackContext context);
+    }
+    public interface IDebugActions
+    {
+        void OnBattleState(InputAction.CallbackContext context);
+        void OnKillAllEnemies(InputAction.CallbackContext context);
     }
 }

@@ -13,6 +13,10 @@ public class StateMachine<T> where T : IState
         currentState = state;
         currentState.OnEnter();
     }
+    public IState GetCurrentState()
+    {
+        return currentState;
+    }
 }
 
 public interface IState

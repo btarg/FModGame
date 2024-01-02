@@ -1,4 +1,8 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using BattleSystem.ScriptableObjects.Characters;
+using System;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(Animator))]
@@ -7,11 +11,34 @@ public class PlayerController : MonoBehaviour
     private StateMachine<IState> stateMachine;
     private PlayerInput playerInput;
 
+    public Character playerCharacter;
+    public List<Character> party;
+    public List<Character> enemies;
+
     private void Awake()
     {
         playerInput = new PlayerInput();
-
         stateMachine = new StateMachine<IState>();
+        if (!party.Contains(playerCharacter))
+        {
+            party.Add(playerCharacter);
+        }
+
+        // default to ExplorationState
+        EnterExplorationState();
+
+        // Register the callback for the BattleState input action
+        playerInput.Debug.BattleState.performed += EnterBattleState;
+    }
+
+
+    public void EnterExplorationState()
+    {
+        if (stateMachine.GetCurrentState() is ExplorationState)
+        {
+            Debug.Log("Already in exploration state.");
+            return;
+        }
         stateMachine.SetState(new ExplorationState(this, playerInput));
     }
 
@@ -20,13 +47,23 @@ public class PlayerController : MonoBehaviour
         stateMachine.Tick();
     }
 
+    private void EnterBattleState(InputAction.CallbackContext ctx)
+    {
+        if (stateMachine.GetCurrentState() is BattleState)
+        {
+            Debug.Log("Already in battle state.");
+            return;
+        }
+        stateMachine.SetState(new BattleState(this, party, enemies, true));
+    }
+
     private void OnEnable()
     {
-        playerInput.CharacterControls.Enable();
+        playerInput.Enable();
     }
 
     private void OnDisable()
     {
-        playerInput.CharacterControls.Disable();
+        playerInput.Disable();
     }
 }

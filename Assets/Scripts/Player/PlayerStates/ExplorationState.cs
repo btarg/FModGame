@@ -101,8 +101,8 @@ public class ExplorationState : IState
         characterController.Move(cameraRelativeMovement);
 
         // Get the reference to the CinemachineVirtualCamera at runtime
-        CinemachineFreeLook virtualCamera = Camera.main.gameObject.GetComponent<CinemachineBrain>().ActiveVirtualCamera as CinemachineFreeLook;
-
+        var stateDrivenCamera = Camera.main.gameObject.GetComponent<CinemachineBrain>().ActiveVirtualCamera as CinemachineStateDrivenCamera;
+        CinemachineFreeLook virtualCamera = stateDrivenCamera.LiveChild as CinemachineFreeLook;
         // Change FOV based on running or walking
         if (virtualCamera != null)
         {

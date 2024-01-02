@@ -134,6 +134,54 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "Debug",
+            "id": "15a5a2fb-7105-4f80-8b14-1f269d067401",
+            "actions": [
+                {
+                    "name": "BattleState",
+                    "type": "Button",
+                    "id": "56ea8f03-771b-43c8-b35e-ad9d89b11c09",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "KillAllEnemies",
+                    "type": "Button",
+                    "id": "153fbd16-df1e-4569-922b-6d730383a01f",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "88447071-5d46-4b28-9c8c-691e76c54437",
+                    "path": "<Keyboard>/enter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "BattleState",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1e562240-55af-4cb8-93aa-9b1d7a99e557",
+                    "path": "<Keyboard>/delete",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "KillAllEnemies",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": []
