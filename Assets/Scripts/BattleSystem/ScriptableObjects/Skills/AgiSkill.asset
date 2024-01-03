@@ -12,11 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eefec9d5358d2d448087fa26d00ad8c, type: 3}
   m_Name: AgiSkill
   m_EditorClassIdentifier: 
-  DisplayName: Agi
-  SPCost: 20
+  skillName: Agi
+  description: 
+  MinDamage: 10
+  MaxDamage: 15
+  skillType: 0
+  elementType: 0
+  buffDebuff: {fileID: 0}
+  cost: 10
+  healAmount: 0
+  spAmount: 0
+  reviveAmount: 0
   TargetsAll: 0
   CanTargetAllies: 0
   CanTargetEnemies: 1
-  DamageElement: 0
-  MinDamage: 10
-  MaxDamage: 15

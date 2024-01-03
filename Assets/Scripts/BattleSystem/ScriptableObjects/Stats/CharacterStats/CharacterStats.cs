@@ -1,63 +1,67 @@
 using UnityEngine;
 
-public enum StrengthType
+namespace BattleSystem.ScriptableObjects.Stats.CharacterStats
 {
-    Resist,
-    Reflect,
-    Nullify
-}
-
-[System.Serializable]
-public struct ElementStrength
-{
-    public ElementType ElementType;
-    public StrengthType StrengthType;
-    [Range(0, 100)]
-    public int ResistPercentage; // Only used when StrengthType is Resist
-}
-
-[CreateAssetMenu(fileName = "NewCharacterStats", menuName = "Character Stats")]
-public class CharacterStats : ScriptableObject
-{
-    public int HP;
-    public int SP;
-    public int ATK;
-    public int DEF;
-    public int EVD;
-    public ElementType[] Weaknesses;
-    public ElementStrength[] Strengths;
-
-    public int XP;
-    public int Level;
-
-    [Header("Level Up")]
-    public int XPToLevelUp;
-    public int HPIncreasePerLevel;
-    public int SPIncreasePerLevel;
-    public int ATKIncreasePerLevel;
-    public int DEFIncreasePerLevel;
-    public int EVDIncreasePerLevel;
-
-    public void GainXP(int amount)
+    [CreateAssetMenu(fileName = "NewCharacterStats", menuName = "Character Stats")]
+    public class CharacterStats : ScriptableObject
     {
-        XP += amount;
+        [Tooltip("Health points of the character")]
+        [Range(0, 1000)]
+        public int HP;
+        public int MaxHP => HP;
 
-        while (XP >= XPToLevelUp)
+        [Tooltip("Skill points of the character")]
+        [Range(0, 1000)]
+        public int SP;
+        public int MaxSP => SP;
+
+        [Tooltip("Multiplier for all types of damage")]
+        [Range(0, 10)]
+        public float ATK;
+
+        [Tooltip("Percentage reduction of all incoming damage (0-1)")]
+        [Range(0, 1)]
+        public float DEF;
+
+        [Tooltip("Percentage chance to evade an attack (0-1)")]
+        [Range(0, 1)]
+        public float EVD;
+
+        [Header("Elemental Affinities")]
+        public ElementType[] Weaknesses;
+        public ElementStrength[] Strengths;
+
+        [Header("Level Up")]
+        public int currentXP;
+        public int currentLevel;
+        public int XPToLevelUp;
+        public int HPIncreasePerLevel;
+        public int SPIncreasePerLevel;
+        public int ATKIncreasePerLevel;
+        public int DEFIncreasePerLevel;
+        public int EVDIncreasePerLevel;
+
+        public void GainXP(int amount)
         {
-            LevelUp();
+            currentXP += amount;
+
+            while (currentXP >= XPToLevelUp)
+            {
+                LevelUp();
+            }
         }
-    }
 
-    private void LevelUp()
-    {
-        XP -= XPToLevelUp;
-        Level++;
+        private void LevelUp()
+        {
+            currentXP -= XPToLevelUp;
+            currentLevel++;
 
-        // Increase base stats
-        HP += HPIncreasePerLevel;
-        SP += SPIncreasePerLevel;
-        ATK += ATKIncreasePerLevel;
-        DEF += DEFIncreasePerLevel;
-        EVD += EVDIncreasePerLevel;
+            // Increase base stats
+            HP += HPIncreasePerLevel;
+            SP += SPIncreasePerLevel;
+            ATK += ATKIncreasePerLevel;
+            DEF += DEFIncreasePerLevel;
+            EVD += EVDIncreasePerLevel;
+        }
     }
 }

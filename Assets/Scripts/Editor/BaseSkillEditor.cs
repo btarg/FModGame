@@ -1,5 +1,6 @@
-using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
+using UnityEngine;
 using BattleSystem.ScriptableObjects.Skills;
 
 [CustomEditor(typeof(BaseSkill))]
@@ -10,10 +11,10 @@ public class BaseSkillEditor : Editor
         BaseSkill skill = (BaseSkill)target;
 
         EditorGUILayout.LabelField("Display Name", EditorStyles.boldLabel);
-        skill.DisplayName = EditorGUILayout.TextField(skill.DisplayName);
+        skill.skillName = EditorGUILayout.TextField(skill.skillName);
 
         EditorGUILayout.LabelField("SP Cost", EditorStyles.boldLabel);
-        skill.SPCost = EditorGUILayout.IntField(skill.SPCost);
+        skill.cost = EditorGUILayout.IntField(skill.cost);
 
         skill.TargetsAll = EditorGUILayout.ToggleLeft("Targets All", skill.TargetsAll);
         skill.CanTargetAllies = EditorGUILayout.ToggleLeft("Can Target Allies", skill.CanTargetAllies);
@@ -25,7 +26,7 @@ public class BaseSkillEditor : Editor
         }
 
         EditorGUILayout.LabelField("Damage Element", EditorStyles.boldLabel);
-        skill.DamageElement = (ElementType)EditorGUILayout.EnumPopup(skill.DamageElement);
+        skill.elementType = (ElementType)EditorGUILayout.EnumPopup(skill.elementType);
 
         EditorGUILayout.LabelField("Damage Range", EditorStyles.boldLabel);
         EditorGUILayout.BeginHorizontal();
@@ -42,3 +43,4 @@ public class BaseSkillEditor : Editor
         }
     }
 }
+#endif

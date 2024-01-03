@@ -1,6 +1,12 @@
 using UnityEngine;
 using UnityEngine.Events;
 using System;
+using System.Linq;
+using BattleSystem.ScriptableObjects.Stats.Modifiers;
+using BattleSystem.ScriptableObjects.Stats;
+using BattleSystem.ScriptableObjects.Stats.CharacterStats;
+using System.Collections.Generic;
+
 namespace BattleSystem.ScriptableObjects.Characters
 {
     [CreateAssetMenu(fileName = "NewHealthManager", menuName = "HealthManager")]
@@ -9,43 +15,82 @@ namespace BattleSystem.ScriptableObjects.Characters
         public bool isAlive = true;
 
         [System.Serializable]
-        public class DamageEvent : UnityEvent<HealthManager, int> { }
+        public class OnDamagedEvent : UnityEvent<HealthManager, int> { }
 
         [System.Serializable]
-        public class NullifyEvent : UnityEvent { }
+        public class OnStrengthEncounteredEvent : UnityEvent<StrengthType> { }
 
         [System.Serializable]
-        public class ReflectEvent : UnityEvent<HealthManager, int> { }
+        public class OnWeaknessEncounteredEvent : UnityEvent<ElementType> { }
 
         [System.Serializable]
-        public class ResistEvent : UnityEvent<int> { }
-
+        public class OnDeathEvent : UnityEvent<HealthManager> { }
         [System.Serializable]
-        public class DeathEvent : UnityEvent<HealthManager> { }
+        public class OnReviveEvent : UnityEvent<Character> { }
 
-        public DamageEvent OnDamage;
-        public NullifyEvent OnNullify;
-        public ReflectEvent OnReflect;
-        public ResistEvent OnResist;
-        public DeathEvent OnDeath;
+
+        public int critDamageMultiplier = 2;
+
+        public OnDamagedEvent OnDamage;
+        public OnStrengthEncounteredEvent OnStrengthEncountered;
+        public OnWeaknessEncounteredEvent OnWeaknessEncountered;
+        public OnDeathEvent OnDeath;
+        public OnReviveEvent OnRevive;
 
         private CharacterStats stats;
-        public int currentHP;
-        public int currentSP;
-        public int currentATK;
-        public int currentDEF;
-        public int currentEVD;
+        private List<BuffDebuff> activeBuffDebuffs = new List<BuffDebuff>();
 
         public void InitStats(CharacterStats _stats)
         {
             isAlive = true;
             stats = _stats;
-            currentHP = _stats.HP;
-            currentSP = _stats.SP;
-            currentATK = _stats.ATK;
-            currentDEF = _stats.DEF;
-            currentEVD = _stats.EVD;
         }
+
+        public int CurrentHP
+        {
+            get
+            {
+                float multiplier = 1;
+                foreach (var buffDebuff in activeBuffDebuffs)
+                {
+                    var modifier = buffDebuff.StatModifiers.FirstOrDefault(m => m.StatType == StatType.HP);
+                    if (modifier != null)
+                    {
+                        multiplier *= modifier.Multiplier;
+                    }
+                }
+                return Mathf.CeilToInt(stats.HP * multiplier);
+            }
+
+            set
+            {
+                stats.HP = Mathf.Min(value, MaxHP);
+            }
+        }
+
+        public int CurrentSP
+        {
+            get
+            {
+                float multiplier = 1;
+                foreach (var buffDebuff in activeBuffDebuffs)
+                {
+                    var modifier = buffDebuff.StatModifiers.FirstOrDefault(m => m.StatType == StatType.SP);
+                    if (modifier != null)
+                    {
+                        multiplier *= modifier.Multiplier;
+                    }
+                }
+                return Mathf.CeilToInt(stats.SP * multiplier);
+            }
+            set
+            {
+                stats.SP = Mathf.Min(value, MaxSP);
+            }
+        }
+
+        public int MaxHP => stats.MaxHP;
+        public int MaxSP => stats.MaxSP;
 
         public void TakeDamage(HealthManager attacker, int damage, ElementType elementType)
         {
@@ -56,43 +101,76 @@ namespace BattleSystem.ScriptableObjects.Characters
                     switch (strength.StrengthType)
                     {
                         case StrengthType.Nullify:
-                            OnNullify?.Invoke();
                             return;
                         case StrengthType.Reflect:
                             attacker.TakeDamage(this, damage, elementType);
-                            OnReflect?.Invoke(attacker, damage);
                             return;
                         case StrengthType.Resist:
                             damage = damage * (100 - strength.ResistPercentage) / 100;
-                            OnResist?.Invoke(damage);
                             break;
                     }
+                    OnStrengthEncountered?.Invoke(strength.StrengthType);
                 }
             }
 
             if (Array.IndexOf(stats.Weaknesses, elementType) >= 0)
             {
-                damage *= 2;
+                // Critical hit!
+                OnWeaknessEncountered?.Invoke(elementType);
+                damage *= critDamageMultiplier;
             }
 
-            currentHP = Mathf.Max(currentHP - damage, 0);
+            CurrentHP = Mathf.Max(CurrentHP - damage, 0);
 
             // If the character's health reaches 0, invoke the death event
-            if (currentHP == 0)
+            if (CurrentHP == 0)
             {
                 Die();
             }
+            else
+            {
+                OnDamage?.Invoke(this, damage);
+            }
+
+        }
+
+        public void Revive(Character character, int amount)
+        {
+            CurrentHP = amount;
+            isAlive = true;
+            OnRevive?.Invoke(character);
         }
 
         public void Heal(int amount)
         {
-            currentHP = Mathf.Min(currentHP + amount, stats.HP);
+            CurrentHP = Mathf.Min(CurrentHP + amount, MaxHP);
+        }
+
+        public void ReplenishSP(int amount)
+        {
+            CurrentSP = Mathf.Min(CurrentSP + amount, MaxSP);
+        }
+        public void RemoveAllStatModifiers()
+        {
+            activeBuffDebuffs.Clear();
         }
 
         public void Die()
         {
             isAlive = false;
             OnDeath?.Invoke(this);
+        }
+
+        public void ApplyBuffDebuff(BuffDebuff buffDebuff)
+        {
+            if (!isAlive) return;
+
+            // If the buff/debuff is already active, remove the original before adding the new one
+            if (activeBuffDebuffs.Contains(buffDebuff) && !buffDebuff.CanStack)
+            {
+                activeBuffDebuffs.Remove(buffDebuff);
+            }
+            activeBuffDebuffs.Add(buffDebuff);
         }
     }
 }

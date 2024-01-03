@@ -1,10 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
 using BattleSystem.ScriptableObjects.Characters;
+using System;
 
 public class BattleState : IState
 {
     private int currentTurnIndex;
+    public List<Character> allCharacters;
     public List<Character> turnOrder;
 
     private bool isPlayerTurn;
@@ -18,6 +20,8 @@ public class BattleState : IState
         // Initialize the turn order with the player's party and the enemies
         turnOrder = new List<Character>(party);
         turnOrder.AddRange(enemies);
+        // copy the turn order to allCharacters
+        allCharacters = new List<Character>(turnOrder);
 
         // If it's an ambush, the player's party goes first
         // Otherwise, the enemies go first
@@ -26,6 +30,7 @@ public class BattleState : IState
         foreach (var character in turnOrder)
         {
             character.Init();
+            character.HealthManager.OnRevive.AddListener(OnCharacterRevived);
         }
     }
 
@@ -40,7 +45,6 @@ public class BattleState : IState
             turnOrderString += character.DisplayName + ", ";
         }
         Debug.Log("Turn order: " + turnOrderString);
-
 
         playerInput = new PlayerInput();
         playerInput.Debug.Enable();
@@ -65,12 +69,14 @@ public class BattleState : IState
         if (!turnOrder.Exists(character => character.IsPlayerCharacter))
         {
             Debug.Log("Defeat!");
+            // TODO: switch to defeat state
             return;
         }
         // If there are no more enemy characters, it's a victory
         else if (!turnOrder.Exists(character => !character.IsPlayerCharacter))
         {
             Debug.Log("Victory!");
+            // TODO: switch to victory state
             return;
         }
 
@@ -88,12 +94,21 @@ public class BattleState : IState
 
     public void OnExit()
     {
-        playerController.EnterExplorationState();
+        // Remove all stat modifiers from all characters outside of battle
+        foreach (var character in allCharacters)
+        {
+            character.HealthManager.RemoveAllStatModifiers();
+        }
     }
 
     private void NextTurn()
     {
         // Increment the turn index, wrapping back to the start if it reaches the end of the list
         currentTurnIndex = (currentTurnIndex + 1) % turnOrder.Count;
+    }
+
+    private void OnCharacterRevived(Character character)
+    {
+        turnOrder.Add(character);
     }
 }

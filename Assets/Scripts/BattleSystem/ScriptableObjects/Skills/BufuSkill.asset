@@ -12,11 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eefec9d5358d2d448087fa26d00ad8c, type: 3}
   m_Name: BufuSkill
   m_EditorClassIdentifier: 
-  DisplayName: Bufu
-  SPCost: 10
+  skillName: Bufu
+  description: 
+  MinDamage: 10
+  MaxDamage: 15
+  skillType: 0
+  elementType: 1
+  buffDebuff: {fileID: 0}
+  cost: 10
+  healAmount: 0
+  spAmount: 0
+  reviveAmount: 0
   TargetsAll: 0
   CanTargetAllies: 0
   CanTargetEnemies: 1
-  DamageElement: 1
-  MinDamage: 10
-  MaxDamage: 15
