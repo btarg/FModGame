@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using BattleSystem.ScriptableObjects.Characters;
 using BattleSystem.ScriptableObjects.Skills;
 using Cinemachine;
-using System;
 using System.Linq;
-using UnityEditor;
+using BattleSystem;
 
 public class BattleState : IState
 {
@@ -25,6 +24,7 @@ public class BattleState : IState
     UUIDCharacterInstance playerCharacter;
 
     private int currentArena;
+    private static readonly int cam = Animator.StringToHash("arenaCam");
 
     public BattleState(PlayerController _playerController, List<Character> _party, List<Character> _enemies, bool _ambush, int _arena)
     {
@@ -49,16 +49,41 @@ public class BattleState : IState
         {
             uUIDCharacter.Character.HealthManager.OnRevive.AddListener(OnCharacterRevived);
             uUIDCharacter.Character.HealthManager.OnDeath.AddListener(OnCharacterDeath);
+            uUIDCharacter.Character.HealthManager.OnDamage.AddListener((healthManager, damage) =>
+            {
+                Debug.Log($"{uUIDCharacter.Character.DisplayName} took {damage} damage. ({healthManager.CurrentHP} HP left)");
+            });
+            uUIDCharacter.Character.HealthManager.OnDamageEvaded.AddListener(() =>
+            {
+                Debug.Log($"{uUIDCharacter.Character.DisplayName} evaded the attack!");
+            });
+            uUIDCharacter.Character.HealthManager.OnWeaknessEncountered.AddListener((elementType) =>
+            {
+                Debug.Log($"{uUIDCharacter.Character.DisplayName} is weak to {elementType}!");
+                if (!AffinityLog.GetWeaknessesEncountered(uUIDCharacter.Character.name).Contains(elementType))
+                {
+                    AffinityLog.LogWeakness(uUIDCharacter.Character.name, elementType);
+                }
+            });
+            uUIDCharacter.Character.HealthManager.OnStrengthEncountered.AddListener((elementType, strengthType) =>
+            {
+                Debug.Log($"{uUIDCharacter.Character.DisplayName} is strong against {strengthType}!");
+                if (!AffinityLog.GetStrengthsEncountered(uUIDCharacter.Character.name).ContainsKey(elementType))
+                {
+                    AffinityLog.LogStrength(uUIDCharacter.Character.name, elementType, strengthType);
+                }
+            });
         }
         stateDrivenCamera = Camera.main.gameObject.GetComponent<CinemachineBrain>().ActiveVirtualCamera as CinemachineStateDrivenCamera;
         stateDrivenCamera.m_AnimatedTarget.SetBool("inBattle", true);
     }
 
+    
+    
     private void InitializeCharacters(IEnumerable<Character> characters)
     {
         foreach (var character in characters)
         {
-            character.Init();
             var characterInstance = new UUIDCharacterInstance(character);
             turnOrder.Add(characterInstance);
             allCharacters.Add(characterInstance);
@@ -92,7 +117,7 @@ public class BattleState : IState
     public void SwitchCameraState(int arenaCam)
     {
         // TODO: use hashes instead of strings
-        stateDrivenCamera.m_AnimatedTarget.SetInteger("arenaCam", arenaCam);
+        stateDrivenCamera.m_AnimatedTarget.SetInteger(cam, arenaCam);
     }
 
     public void SpawnCharacters(int arena)
@@ -119,32 +144,23 @@ public class BattleState : IState
 
     private void SpawnCharacter(UUIDCharacterInstance characterInstance, List<Transform> playerPositions, List<Transform> enemyPositions, int index)
     {
-        Transform spawnMarker;
-        if (characterInstance.Character.IsPlayerCharacter)
-        {
-            spawnMarker = playerPositions[index];
-        }
-        else
-        {
+        Transform spawnMarker = characterInstance.Character.IsPlayerCharacter ? playerPositions[index] :
             // Use modulo to wrap around if there are more enemies than positions
-            spawnMarker = enemyPositions[index % enemyPositions.Count];
-        }
-        GameObject instance = GameObject.Instantiate(characterInstance.Character.prefab, spawnMarker.position, spawnMarker.rotation);
+            enemyPositions[index % enemyPositions.Count];
+        GameObject instance = Object.Instantiate(characterInstance.Character.prefab, spawnMarker.position, spawnMarker.rotation);
         // associate this character with a GUID
         instance.name = characterInstance.UUID;
     }
 
     private void Shuffle(List<Transform> list)
     {
-        System.Random rng = new System.Random();
+        System.Random rng = new();
         int n = list.Count;
         while (n > 1)
         {
             n--;
             int k = rng.Next(n + 1);
-            Transform value = list[k];
-            list[k] = list[n];
-            list[n] = value;
+            (list[k], list[n]) = (list[n], list[k]);
         }
     }
 

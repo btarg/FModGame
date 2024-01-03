@@ -15,6 +15,7 @@ namespace BattleSystem.ScriptableObjects.Characters
             UUID = System.Guid.NewGuid().ToString();
             Character = ScriptableObject.CreateInstance<Character>();
             // clone character values from base character
+            Character.name = baseCharacter.name;
             Character.DisplayName = baseCharacter.DisplayName;
             Character.Color = baseCharacter.Color;
             Character.attackSkill = baseCharacter.attackSkill;
