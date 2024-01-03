@@ -1,5 +1,8 @@
-namespace BattleSystem.ScriptableObjects.Stats
+using System;
+
+namespace BattleSystem.DataTypes
 {
+    [Serializable]
     public enum StrengthType
     {
         Resist,

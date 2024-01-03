@@ -13,23 +13,19 @@ MonoBehaviour:
   m_Name: FireEnemyHealthManager
   m_EditorClassIdentifier: 
   isAlive: 1
+  critDamageMultiplier: 2
   OnDamage:
     m_PersistentCalls:
       m_Calls: []
-  OnNullify:
+  OnStrengthEncountered:
     m_PersistentCalls:
       m_Calls: []
-  OnReflect:
-    m_PersistentCalls:
-      m_Calls: []
-  OnResist:
+  OnWeaknessEncountered:
     m_PersistentCalls:
       m_Calls: []
   OnDeath:
     m_PersistentCalls:
       m_Calls: []
-  currentHP: 0
-  currentSP: 0
-  currentATK: 0
-  currentDEF: 0
-  currentEVD: 0
+  OnRevive:
+    m_PersistentCalls:
+      m_Calls: []

@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using BattleSystem.ScriptableObjects.Characters;
 using System;
+using BattleSystem.ScriptableObjects.Skills;
 
 public class BattleState : IState
 {
@@ -13,6 +14,7 @@ public class BattleState : IState
     private PlayerController playerController;
 
     private PlayerInput playerInput;
+    private bool isWaitingForPlayerInput;
 
     public BattleState(PlayerController _playerController, List<Character> party, List<Character> enemies, bool ambush)
     {
@@ -36,6 +38,8 @@ public class BattleState : IState
 
     public void OnEnter()
     {
+        isWaitingForPlayerInput = false;
+
         // TODO: entered the battle state, play animations and music
         Debug.Log("Entered battle state!");
         // log turn order by getting each character's display name
@@ -48,6 +52,11 @@ public class BattleState : IState
 
         playerInput = new PlayerInput();
         playerInput.Debug.Enable();
+
+        playerController.OnSkillAndTargetSelected.AddListener(OnSkillAndTargetSelected);
+
+
+        // TODO: awful debug code, remove this later
         playerInput.Debug.KillAllEnemies.performed += _ =>
         {
             foreach (var character in turnOrder)
@@ -58,6 +67,39 @@ public class BattleState : IState
                 }
             }
         };
+        playerInput.Debug.Skill1.performed += _ =>
+        {
+            if (isPlayerTurn)
+            {
+                OnSkillAndTargetSelected(playerController.playerCharacter.AvailableSkills[0], turnOrder[currentTurnIndex + 1]);
+            }
+        };
+        playerInput.Debug.Skill2.performed += _ =>
+        {
+            if (isPlayerTurn)
+            {
+                OnSkillAndTargetSelected(playerController.playerCharacter.AvailableSkills[1], turnOrder[currentTurnIndex + 1]);
+            }
+        };
+        playerInput.Debug.Skill3.performed += _ =>
+        {
+            if (isPlayerTurn)
+            {
+                OnSkillAndTargetSelected(playerController.playerCharacter.AvailableSkills[2], turnOrder[currentTurnIndex + 1]);
+            }
+        };
+
+    }
+
+    private void OnSkillAndTargetSelected(BaseSkill skill, Character target)
+    {
+        if (isWaitingForPlayerInput)
+        {
+            // Perform the selected skill on the selected target
+            skill.Use(playerController.playerCharacter, target);
+            isWaitingForPlayerInput = false;
+            NextTurn();
+        }
     }
 
     public void Tick()
@@ -83,13 +125,19 @@ public class BattleState : IState
         isPlayerTurn = turnOrder[currentTurnIndex].IsPlayerCharacter;
         if (isPlayerTurn)
         {
-            // TODO: Handle player's turn
+            if (!isWaitingForPlayerInput)
+            {
+                Debug.Log("It's the player's turn!");
+                isWaitingForPlayerInput = true;
+            }
         }
         else
         {
             // TODO: Handle enemy's turn
+            Debug.Log("It's the enemy's turn!");
+            // TODO: wait for enemy AI input
+            NextTurn();
         }
-        NextTurn(); // Move to the next turn after handling the current turn
     }
 
     public void OnExit()

@@ -1,4 +1,4 @@
-namespace BattleSystem.ScriptableObjects.Stats
+namespace BattleSystem.DataTypes
 {
     public enum StatType
     {

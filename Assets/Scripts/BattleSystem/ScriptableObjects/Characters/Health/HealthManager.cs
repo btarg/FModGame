@@ -3,7 +3,7 @@ using UnityEngine.Events;
 using System;
 using System.Linq;
 using BattleSystem.ScriptableObjects.Stats.Modifiers;
-using BattleSystem.ScriptableObjects.Stats;
+using BattleSystem.DataTypes;
 using BattleSystem.ScriptableObjects.Stats.CharacterStats;
 using System.Collections.Generic;
 
@@ -24,7 +24,9 @@ namespace BattleSystem.ScriptableObjects.Characters
         public class OnWeaknessEncounteredEvent : UnityEvent<ElementType> { }
 
         [System.Serializable]
-        public class OnDeathEvent : UnityEvent<HealthManager> { }
+        public class OnDamageEvadedEvent : UnityEvent { }
+        [System.Serializable]
+        public class OnDeathEvent : UnityEvent { }
         [System.Serializable]
         public class OnReviveEvent : UnityEvent<Character> { }
 
@@ -36,6 +38,7 @@ namespace BattleSystem.ScriptableObjects.Characters
         public OnWeaknessEncounteredEvent OnWeaknessEncountered;
         public OnDeathEvent OnDeath;
         public OnReviveEvent OnRevive;
+        public OnDamageEvadedEvent OnDamageEvaded;
 
         private CharacterStats stats;
         private List<BuffDebuff> activeBuffDebuffs = new List<BuffDebuff>();
@@ -46,47 +49,45 @@ namespace BattleSystem.ScriptableObjects.Characters
             stats = _stats;
         }
 
+        private int GetCurrentStat(StatType statType)
+        {
+            return Mathf.CeilToInt(GetCurrentStatFloat(statType));
+        }
+
+        private float GetCurrentStatFloat(StatType statType)
+        {
+            float multiplier = 1;
+            foreach (var buffDebuff in activeBuffDebuffs)
+            {
+                var modifier = buffDebuff.StatModifiers.FirstOrDefault(m => m.StatType == statType);
+                if (modifier != null)
+                {
+                    multiplier *= modifier.Multiplier;
+                }
+            }
+            return stats.GetStat(statType) * multiplier;
+        }
+
         public int CurrentHP
         {
-            get
-            {
-                float multiplier = 1;
-                foreach (var buffDebuff in activeBuffDebuffs)
-                {
-                    var modifier = buffDebuff.StatModifiers.FirstOrDefault(m => m.StatType == StatType.HP);
-                    if (modifier != null)
-                    {
-                        multiplier *= modifier.Multiplier;
-                    }
-                }
-                return Mathf.CeilToInt(stats.HP * multiplier);
-            }
-
-            set
-            {
-                stats.HP = Mathf.Min(value, MaxHP);
-            }
+            get { return GetCurrentStat(StatType.HP); }
+            set { stats.HP = Mathf.Min(value, MaxHP); }
         }
 
         public int CurrentSP
         {
-            get
-            {
-                float multiplier = 1;
-                foreach (var buffDebuff in activeBuffDebuffs)
-                {
-                    var modifier = buffDebuff.StatModifiers.FirstOrDefault(m => m.StatType == StatType.SP);
-                    if (modifier != null)
-                    {
-                        multiplier *= modifier.Multiplier;
-                    }
-                }
-                return Mathf.CeilToInt(stats.SP * multiplier);
-            }
-            set
-            {
-                stats.SP = Mathf.Min(value, MaxSP);
-            }
+            get { return GetCurrentStat(StatType.SP); }
+            set { stats.SP = Mathf.Min(value, MaxSP); }
+        }
+
+        public float CurrentDEF
+        {
+            get { return GetCurrentStatFloat(StatType.DEF); }
+        }
+
+        public float CurrentEVD
+        {
+            get { return GetCurrentStatFloat(StatType.EVD); }
         }
 
         public int MaxHP => stats.MaxHP;
@@ -94,6 +95,21 @@ namespace BattleSystem.ScriptableObjects.Characters
 
         public void TakeDamage(HealthManager attacker, int damage, ElementType elementType)
         {
+            if (!isAlive) return;
+
+            // Calculate evasion
+            float evasionChance = CurrentEVD;
+            if (UnityEngine.Random.value < evasionChance)
+            {
+                // The attack is evaded, return
+                OnDamageEvaded?.Invoke();
+                return;
+            }
+
+            // Calculate defense
+            float defenseMultiplier = CurrentDEF;
+            damage = Mathf.CeilToInt(damage * (1 - defenseMultiplier));
+
             if (Array.IndexOf(stats.Strengths, elementType) >= 0)
             {
                 foreach (var strength in stats.Strengths)
@@ -122,16 +138,13 @@ namespace BattleSystem.ScriptableObjects.Characters
 
             CurrentHP = Mathf.Max(CurrentHP - damage, 0);
 
+            OnDamage?.Invoke(this, damage);
+
             // If the character's health reaches 0, invoke the death event
             if (CurrentHP == 0)
             {
                 Die();
             }
-            else
-            {
-                OnDamage?.Invoke(this, damage);
-            }
-
         }
 
         public void Revive(Character character, int amount)
@@ -158,7 +171,7 @@ namespace BattleSystem.ScriptableObjects.Characters
         public void Die()
         {
             isAlive = false;
-            OnDeath?.Invoke(this);
+            OnDeath?.Invoke();
         }
 
         public void ApplyBuffDebuff(BuffDebuff buffDebuff)

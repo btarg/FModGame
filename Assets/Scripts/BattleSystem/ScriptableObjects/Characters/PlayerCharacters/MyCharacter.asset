@@ -12,10 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ddf7b4db15c6e9429afdaa006e96336, type: 3}
   m_Name: MyCharacter
   m_EditorClassIdentifier: 
-  DisplayName: Ben's character
+  DisplayName: Ben
   Color: {r: 0.05842829, g: 0.6862634, b: 0.9528302, a: 0}
   Stats: {fileID: 11400000, guid: 68c5ec3f23482704f8a35bfc328a1b9e, type: 2}
+  attackSkill: {fileID: 11400000, guid: eb5fd6ed6649a2f4b870e31efb89f290, type: 2}
   AvailableSkills:
   - {fileID: 11400000, guid: 5e6b55b050dadcf44ac4b779f03dcf0e, type: 2}
+  - {fileID: 11400000, guid: 28aae8ec915844b4b9b673257f38e20c, type: 2}
+  - {fileID: 11400000, guid: a817c179c6460bd4a8a68edaf77de9f0, type: 2}
   HealthManager: {fileID: 11400000, guid: f8b28ffead158674fb146199a7d737c6, type: 2}
   IsPlayerCharacter: 1

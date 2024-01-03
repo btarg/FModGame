@@ -1,4 +1,4 @@
-namespace BattleSystem.ScriptableObjects.Skills
+namespace BattleSystem.DataTypes
 {
     public enum SkillType
     {

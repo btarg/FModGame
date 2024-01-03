@@ -2,7 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using BattleSystem.ScriptableObjects.Characters;
-using System;
+using UnityEngine.Events;
+using BattleSystem.ScriptableObjects.Skills;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(Animator))]
@@ -14,6 +15,14 @@ public class PlayerController : MonoBehaviour
     public Character playerCharacter;
     public List<Character> party;
     public List<Character> enemies;
+
+    public UnityEvent<BaseSkill, Character> OnSkillAndTargetSelected;
+
+
+    public void SelectSkillAndTarget(BaseSkill skill, Character target)
+    {
+        OnSkillAndTargetSelected?.Invoke(skill, target);
+    }
 
     private void Awake()
     {

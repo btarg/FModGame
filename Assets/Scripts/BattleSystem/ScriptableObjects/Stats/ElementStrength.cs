@@ -1,4 +1,5 @@
 using UnityEngine;
+using BattleSystem.DataTypes;
 
 namespace BattleSystem.ScriptableObjects.Stats
 {

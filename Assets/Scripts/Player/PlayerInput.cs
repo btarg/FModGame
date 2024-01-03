@@ -178,6 +178,33 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Skill1"",
+                    ""type"": ""Button"",
+                    ""id"": ""09300763-98b0-4020-9214-b8124d25ca51"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Skill2"",
+                    ""type"": ""Button"",
+                    ""id"": ""71960e94-430f-4a30-a092-c7cf669eb074"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Skill3"",
+                    ""type"": ""Button"",
+                    ""id"": ""119c0a15-c794-46ab-b39f-3f8c992545dd"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -202,6 +229,39 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                     ""action"": ""KillAllEnemies"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0ffb69ef-72d4-4abe-b552-4e05df54fc53"",
+                    ""path"": ""<Keyboard>/insert"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Skill1"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""79899f91-4644-4a07-8d99-98be7b8b7dfd"",
+                    ""path"": ""<Keyboard>/home"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Skill2"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""eec27cb9-f2f2-4a9d-8bfe-555ec8a1bb5e"",
+                    ""path"": ""<Keyboard>/pageUp"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Skill3"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -217,6 +277,9 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         m_Debug = asset.FindActionMap("Debug", throwIfNotFound: true);
         m_Debug_BattleState = m_Debug.FindAction("BattleState", throwIfNotFound: true);
         m_Debug_KillAllEnemies = m_Debug.FindAction("KillAllEnemies", throwIfNotFound: true);
+        m_Debug_Skill1 = m_Debug.FindAction("Skill1", throwIfNotFound: true);
+        m_Debug_Skill2 = m_Debug.FindAction("Skill2", throwIfNotFound: true);
+        m_Debug_Skill3 = m_Debug.FindAction("Skill3", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -342,12 +405,18 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
     private List<IDebugActions> m_DebugActionsCallbackInterfaces = new List<IDebugActions>();
     private readonly InputAction m_Debug_BattleState;
     private readonly InputAction m_Debug_KillAllEnemies;
+    private readonly InputAction m_Debug_Skill1;
+    private readonly InputAction m_Debug_Skill2;
+    private readonly InputAction m_Debug_Skill3;
     public struct DebugActions
     {
         private @PlayerInput m_Wrapper;
         public DebugActions(@PlayerInput wrapper) { m_Wrapper = wrapper; }
         public InputAction @BattleState => m_Wrapper.m_Debug_BattleState;
         public InputAction @KillAllEnemies => m_Wrapper.m_Debug_KillAllEnemies;
+        public InputAction @Skill1 => m_Wrapper.m_Debug_Skill1;
+        public InputAction @Skill2 => m_Wrapper.m_Debug_Skill2;
+        public InputAction @Skill3 => m_Wrapper.m_Debug_Skill3;
         public InputActionMap Get() { return m_Wrapper.m_Debug; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -363,6 +432,15 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
             @KillAllEnemies.started += instance.OnKillAllEnemies;
             @KillAllEnemies.performed += instance.OnKillAllEnemies;
             @KillAllEnemies.canceled += instance.OnKillAllEnemies;
+            @Skill1.started += instance.OnSkill1;
+            @Skill1.performed += instance.OnSkill1;
+            @Skill1.canceled += instance.OnSkill1;
+            @Skill2.started += instance.OnSkill2;
+            @Skill2.performed += instance.OnSkill2;
+            @Skill2.canceled += instance.OnSkill2;
+            @Skill3.started += instance.OnSkill3;
+            @Skill3.performed += instance.OnSkill3;
+            @Skill3.canceled += instance.OnSkill3;
         }
 
         private void UnregisterCallbacks(IDebugActions instance)
@@ -373,6 +451,15 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
             @KillAllEnemies.started -= instance.OnKillAllEnemies;
             @KillAllEnemies.performed -= instance.OnKillAllEnemies;
             @KillAllEnemies.canceled -= instance.OnKillAllEnemies;
+            @Skill1.started -= instance.OnSkill1;
+            @Skill1.performed -= instance.OnSkill1;
+            @Skill1.canceled -= instance.OnSkill1;
+            @Skill2.started -= instance.OnSkill2;
+            @Skill2.performed -= instance.OnSkill2;
+            @Skill2.canceled -= instance.OnSkill2;
+            @Skill3.started -= instance.OnSkill3;
+            @Skill3.performed -= instance.OnSkill3;
+            @Skill3.canceled -= instance.OnSkill3;
         }
 
         public void RemoveCallbacks(IDebugActions instance)
@@ -400,5 +487,8 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
     {
         void OnBattleState(InputAction.CallbackContext context);
         void OnKillAllEnemies(InputAction.CallbackContext context);
+        void OnSkill1(InputAction.CallbackContext context);
+        void OnSkill2(InputAction.CallbackContext context);
+        void OnSkill3(InputAction.CallbackContext context);
     }
 }

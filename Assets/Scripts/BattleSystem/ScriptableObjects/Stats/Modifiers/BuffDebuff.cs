@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using BattleSystem.DataTypes;
 
 namespace BattleSystem.ScriptableObjects.Stats.Modifiers
 {
@@ -13,7 +14,6 @@ namespace BattleSystem.ScriptableObjects.Stats.Modifiers
     [CreateAssetMenu(fileName = "NewBuffDebuff", menuName = "Buff or Debuff")]
     public class BuffDebuff : ScriptableObject
     {
-        public string DisplayName;
         [Tooltip("Stat string displayed in the character's stat screen")]
         public string StatString;
         public List<StatModifier> StatModifiers;

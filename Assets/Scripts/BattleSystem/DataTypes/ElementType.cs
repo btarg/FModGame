@@ -1,14 +1,20 @@
-public enum ElementType
+using System;
+
+namespace BattleSystem.DataTypes
 {
-    Fire,
-    Ice,
-    Elec,
-    Phys,
-    Gun,
-    Wind,
-    Almighty,
-    Psy,
-    Curse,
-    Bless,
-    Nuke
+    [Serializable]
+    public enum ElementType
+    {
+        Fire,
+        Ice,
+        Elec,
+        Phys,
+        Gun,
+        Wind,
+        Almighty,
+        Psy,
+        Curse,
+        Bless,
+        Nuke
+    }
 }

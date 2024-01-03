@@ -12,18 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 868fe169bd4078b42b9d02504b402f1d, type: 3}
   m_Name: ExampleFireCharacterStats
   m_EditorClassIdentifier: 
-  HP: 75
+  HP: 30
   SP: 20
   ATK: 10
-  DEF: 20
-  EVD: 20
+  DEF: 1
+  EVD: 1
   Weaknesses: 0100000005000000
   Strengths:
   - ElementType: 0
     StrengthType: 0
     ResistPercentage: 50
-  XP: 0
-  Level: 0
+  currentXP: 0
+  currentLevel: 0
   XPToLevelUp: 0
   HPIncreasePerLevel: 0
   SPIncreasePerLevel: 0

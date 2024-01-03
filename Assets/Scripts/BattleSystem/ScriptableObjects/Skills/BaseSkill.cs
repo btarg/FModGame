@@ -1,6 +1,7 @@
 using UnityEngine;
 using BattleSystem.ScriptableObjects.Characters;
 using BattleSystem.ScriptableObjects.Stats.Modifiers;
+using BattleSystem.DataTypes;
 
 namespace BattleSystem.ScriptableObjects.Skills
 {
@@ -9,6 +10,7 @@ namespace BattleSystem.ScriptableObjects.Skills
     {
         public string skillName;
         public string description;
+        public string onUsedMessage;
 
         public int MinDamage;
         public int MaxDamage;

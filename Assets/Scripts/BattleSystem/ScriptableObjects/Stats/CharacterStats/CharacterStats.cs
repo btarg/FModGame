@@ -1,4 +1,5 @@
 using UnityEngine;
+using BattleSystem.DataTypes;
 
 namespace BattleSystem.ScriptableObjects.Stats.CharacterStats
 {
@@ -40,6 +41,19 @@ namespace BattleSystem.ScriptableObjects.Stats.CharacterStats
         public int ATKIncreasePerLevel;
         public int DEFIncreasePerLevel;
         public int EVDIncreasePerLevel;
+
+        public float GetStat(StatType statType)
+        {
+            return statType switch
+            {
+                StatType.HP => HP,
+                StatType.SP => SP,
+                StatType.ATK => ATK,
+                StatType.DEF => DEF,
+                StatType.EVD => EVD,
+                _ => 0,
+            };
+        }
 
         public void GainXP(int amount)
         {
