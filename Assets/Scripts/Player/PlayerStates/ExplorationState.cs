@@ -74,6 +74,11 @@ public class ExplorationState : IState
         playerInput.CharacterControls.Run.performed -= OnRun;
 
         enableInput = false;
+
+        // reset animator parameters
+        animator.SetBool(isWalkingHash, false);
+        animator.SetBool(isRunningHash, false);
+        animator.SetBool(isFallingHash, false);
     }
 
     public void Tick()

@@ -39,6 +39,7 @@ public class BattleState : IState
     public void OnEnter()
     {
         isWaitingForPlayerInput = false;
+        AffinityLog.Load();
 
         // TODO: entered the battle state, play animations and music
         Debug.Log("Entered battle state!");
@@ -47,6 +48,15 @@ public class BattleState : IState
         foreach (var character in turnOrder)
         {
             turnOrderString += character.DisplayName + ", ";
+            // log the character's strengths and weaknesses
+            foreach (var strength in AffinityLog.GetStrengthsEncountered(character.name))
+            {
+                Debug.Log($"{character.name} is strong against {strength.Key} {strength.Value}");
+            }
+            foreach (var weakness in AffinityLog.GetWeaknessesEncountered(character.name))
+            {
+                Debug.Log($"{character.name} is weak to {weakness}");
+            }
         }
         Debug.Log("Turn order: " + turnOrderString);
 

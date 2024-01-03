@@ -45,7 +45,19 @@ namespace BattleSystem.ScriptableObjects.Characters
         public void OnWeaknessEncountered(ElementType elementType)
         {
             Debug.Log($"{DisplayName} is weak to {elementType}!");
-            // TODO: log this
+            if (!AffinityLog.GetWeaknessesEncountered(name).Contains(elementType))
+            {
+                AffinityLog.LogWeakness(name, elementType);
+            }
+        }
+
+        public void OnStrengthEncountered(ElementType elementType, StrengthType strengthType)
+        {
+            Debug.Log($"{DisplayName} is strong against {strengthType}!");
+            if (!AffinityLog.GetStrengthsEncountered(name).ContainsKey(elementType))
+            {
+                AffinityLog.LogStrength(name, elementType, strengthType);
+            }
         }
 
     }

@@ -18,7 +18,7 @@ namespace BattleSystem.ScriptableObjects.Characters
         public class OnDamagedEvent : UnityEvent<HealthManager, int> { }
 
         [System.Serializable]
-        public class OnStrengthEncounteredEvent : UnityEvent<StrengthType> { }
+        public class OnStrengthEncounteredEvent : UnityEvent<ElementType, StrengthType> { }
 
         [System.Serializable]
         public class OnWeaknessEncounteredEvent : UnityEvent<ElementType> { }
@@ -125,7 +125,7 @@ namespace BattleSystem.ScriptableObjects.Characters
                             damage = damage * (100 - strength.ResistPercentage) / 100;
                             break;
                     }
-                    OnStrengthEncountered?.Invoke(strength.StrengthType);
+                    OnStrengthEncountered?.Invoke(strength.ElementType, strength.StrengthType);
                 }
             }
 

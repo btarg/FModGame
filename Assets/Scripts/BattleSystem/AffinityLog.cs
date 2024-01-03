@@ -31,6 +31,7 @@ public class AffinityLogDictionary
 public static class AffinityLog
 {
     private static AffinityLogDictionary log = new();
+    private static readonly string jsonFilePath = Path.Combine(Application.persistentDataPath, "AffinityLog.json");
 
     private static AffinityData GetOrCreateData(string characterName)
     {
@@ -46,11 +47,13 @@ public static class AffinityLog
     public static void LogStrength(string characterName, ElementType strength, StrengthType type)
     {
         GetOrCreateData(characterName).strengths[strength] = type;
+        Save();
     }
 
     public static void LogWeakness(string characterName, ElementType weakness)
     {
         GetOrCreateData(characterName).weaknesses.Add(weakness);
+        Save();
     }
 
     public static Dictionary<ElementType, StrengthType> GetStrengthsEncountered(string characterName)
@@ -76,7 +79,17 @@ public static class AffinityLog
         return true;
     }
 
-    public static void SaveToFile(string filePath)
+    public static void Save()
+    {
+        SaveToFile(jsonFilePath);
+    }
+
+    public static bool Load()
+    {
+        return LoadFromFile(jsonFilePath);
+    }
+
+    private static void SaveToFile(string filePath)
     {
         Debug.Log("Saving affinity log to " + filePath);
         string json = JsonUtility.ToJson(log);
