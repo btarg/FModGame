@@ -15,8 +15,8 @@ MonoBehaviour:
   HP: 30
   SP: 20
   ATK: 10
-  DEF: 1
-  EVD: 1
+  DEF: 0
+  EVD: 0.05
   Weaknesses: 0100000005000000
   Strengths:
   - ElementType: 0

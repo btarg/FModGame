@@ -16,10 +16,10 @@ public class PlayerController : MonoBehaviour
     public List<Character> party;
     public List<Character> enemies;
 
-    public UnityEvent<BaseSkill, Character> OnSkillAndTargetSelected;
+    public UnityEvent<BaseSkill, UUIDCharacterInstance> OnSkillAndTargetSelected;
 
 
-    public void SelectSkillAndTarget(BaseSkill skill, Character target)
+    public void SelectSkillAndTarget(BaseSkill skill, UUIDCharacterInstance target)
     {
         OnSkillAndTargetSelected?.Invoke(skill, target);
     }
@@ -63,7 +63,8 @@ public class PlayerController : MonoBehaviour
             Debug.Log("Already in battle state.");
             return;
         }
-        stateMachine.SetState(new BattleState(this, party, enemies, true));
+        // TODO: set these values based on the encounter
+        stateMachine.SetState(new BattleState(this, party, enemies, true, 1));
     }
 
     private void OnEnable()

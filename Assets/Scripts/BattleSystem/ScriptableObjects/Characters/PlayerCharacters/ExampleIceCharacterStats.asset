@@ -15,15 +15,15 @@ MonoBehaviour:
   HP: 100
   SP: 100
   ATK: 1
-  DEF: 1
-  EVD: 1
+  DEF: 0.1
+  EVD: 0.1
   Weaknesses: 00000000
   Strengths:
   - ElementType: 1
     StrengthType: 0
     ResistPercentage: 50
-  XP: 0
-  Level: 0
+  currentXP: 0
+  currentLevel: 0
   XPToLevelUp: 0
   HPIncreasePerLevel: 10
   SPIncreasePerLevel: 10

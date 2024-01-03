@@ -22,3 +22,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a817c179c6460bd4a8a68edaf77de9f0, type: 2}
   HealthManager: {fileID: 11400000, guid: f8b28ffead158674fb146199a7d737c6, type: 2}
   IsPlayerCharacter: 1
+  prefab: {fileID: 4115895661672177110, guid: a65f9e80e9260714d85417f54f754e63, type: 3}

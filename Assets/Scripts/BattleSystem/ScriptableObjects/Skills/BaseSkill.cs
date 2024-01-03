@@ -34,8 +34,10 @@ namespace BattleSystem.ScriptableObjects.Skills
             return Mathf.CeilToInt(baseDamage * character.Stats.ATK);
         }
 
-        public void Use(Character user, Character target)
+        public void Use(UUIDCharacterInstance userInstance, UUIDCharacterInstance targetInstance)
         {
+            var target = targetInstance.Character;
+            var user = userInstance.Character;
             Debug.Log($"{user.DisplayName} used {skillName} on {target.DisplayName}.");
             switch (skillType)
             {
@@ -59,8 +61,7 @@ namespace BattleSystem.ScriptableObjects.Skills
                     // Use the skill to revive
                     if (!target.HealthManager.isAlive)
                     {
-                        target.HealthManager.CurrentHP = reviveAmount;
-                        target.HealthManager.isAlive = true;
+                        target.HealthManager.Revive(targetInstance, reviveAmount);
                     }
                     break;
             }

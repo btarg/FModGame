@@ -18,12 +18,16 @@ namespace BattleSystem.ScriptableObjects.Characters
         public HealthManager HealthManager;
         public bool IsPlayerCharacter;
 
+        public GameObject prefab;
+
         public void Init()
         {
-            HealthManager.InitStats(Stats);
             HealthManager.OnDeath.AddListener(OnDeath);
             HealthManager.OnWeaknessEncountered.AddListener(OnWeaknessEncountered);
+            HealthManager.OnStrengthEncountered.AddListener(OnStrengthEncountered);
             HealthManager.OnDamage.AddListener(OnDamage);
+            HealthManager.OnDamageEvaded.AddListener(OnDamageEvaded);
+            HealthManager.OnRevive.AddListener(OnRevive);
 
             Debug.Log($"{DisplayName} has been initialized.");
         }
@@ -37,9 +41,13 @@ namespace BattleSystem.ScriptableObjects.Characters
             Debug.Log($"{DisplayName} evaded the attack!");
         }
 
-        public void OnDeath()
+        public void OnDeath(string uuid)
         {
             Debug.Log($"{DisplayName} has died.");
+        }
+        public void OnRevive(string uuid)
+        {
+            Debug.Log($"{DisplayName} has been revived.");
         }
 
         public void OnWeaknessEncountered(ElementType elementType)

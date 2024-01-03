@@ -14,39 +14,31 @@ namespace BattleSystem.ScriptableObjects.Characters
     {
         public bool isAlive = true;
 
-        [System.Serializable]
-        public class OnDamagedEvent : UnityEvent<HealthManager, int> { }
-
-        [System.Serializable]
-        public class OnStrengthEncounteredEvent : UnityEvent<ElementType, StrengthType> { }
-
-        [System.Serializable]
-        public class OnWeaknessEncounteredEvent : UnityEvent<ElementType> { }
-
-        [System.Serializable]
-        public class OnDamageEvadedEvent : UnityEvent { }
-        [System.Serializable]
-        public class OnDeathEvent : UnityEvent { }
-        [System.Serializable]
-        public class OnReviveEvent : UnityEvent<Character> { }
-
+        [System.Serializable] public class OnDamagedEvent : UnityEvent<HealthManager, int> { }
+        [System.Serializable] public class OnStrengthEncounteredEvent : UnityEvent<ElementType, StrengthType> { }
+        [System.Serializable] public class OnWeaknessEncounteredEvent : UnityEvent<ElementType> { }
+        [System.Serializable] public class OnDamageEvadedEvent : UnityEvent { }
+        [System.Serializable] public class OnDeathEvent : UnityEvent<string> { }
+        [System.Serializable] public class OnReviveEvent : UnityEvent<string> { }
 
         public int critDamageMultiplier = 2;
+        public OnDamagedEvent OnDamage = new();
+        public OnStrengthEncounteredEvent OnStrengthEncountered = new();
+        public OnWeaknessEncounteredEvent OnWeaknessEncountered = new();
+        public OnDeathEvent OnDeath = new();
+        public OnReviveEvent OnRevive = new();
+        public OnDamageEvadedEvent OnDamageEvaded = new();
 
-        public OnDamagedEvent OnDamage;
-        public OnStrengthEncounteredEvent OnStrengthEncountered;
-        public OnWeaknessEncounteredEvent OnWeaknessEncountered;
-        public OnDeathEvent OnDeath;
-        public OnReviveEvent OnRevive;
-        public OnDamageEvadedEvent OnDamageEvaded;
 
         private CharacterStats stats;
+        private string UUID;
         private List<BuffDebuff> activeBuffDebuffs = new List<BuffDebuff>();
 
-        public void InitStats(CharacterStats _stats)
+        public void InitStats(CharacterStats _stats, string _UUID)
         {
             isAlive = true;
             stats = _stats;
+            UUID = _UUID;
         }
 
         private int GetCurrentStat(StatType statType)
@@ -147,11 +139,11 @@ namespace BattleSystem.ScriptableObjects.Characters
             }
         }
 
-        public void Revive(Character character, int amount)
+        public void Revive(UUIDCharacterInstance character, int amount)
         {
             CurrentHP = amount;
             isAlive = true;
-            OnRevive?.Invoke(character);
+            OnRevive?.Invoke(character.UUID);
         }
 
         public void Heal(int amount)
@@ -171,7 +163,7 @@ namespace BattleSystem.ScriptableObjects.Characters
         public void Die()
         {
             isAlive = false;
-            OnDeath?.Invoke();
+            OnDeath?.Invoke(UUID);
         }
 
         public void ApplyBuffDebuff(BuffDebuff buffDebuff)
