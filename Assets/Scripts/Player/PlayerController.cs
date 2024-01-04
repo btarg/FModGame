@@ -1,79 +1,84 @@
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.InputSystem;
 using BattleSystem.ScriptableObjects.Characters;
-using UnityEngine.Events;
 using BattleSystem.ScriptableObjects.Skills;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
-[RequireComponent(typeof(CharacterController))]
-[RequireComponent(typeof(Animator))]
-public class PlayerController : MonoBehaviour
+namespace Player
 {
-    private StateMachine<IState> stateMachine;
-    private PlayerInput playerInput;
-
-    public Character playerCharacter;
-    public List<Character> party;
-    public List<Character> enemies;
-
-    public UnityEvent<BaseSkill, UUIDCharacterInstance> OnSkillAndTargetSelected;
-
-
-    public void SelectSkillAndTarget(BaseSkill skill, UUIDCharacterInstance target)
+    [RequireComponent(typeof(CharacterController))]
+    [RequireComponent(typeof(Animator))]
+    public class PlayerController : MonoBehaviour
     {
-        OnSkillAndTargetSelected?.Invoke(skill, target);
-    }
+        private StateMachine<IState> stateMachine;
+        private PlayerInput playerInput;
 
-    private void Awake()
-    {
-        playerInput = new PlayerInput();
-        stateMachine = new StateMachine<IState>();
-        if (!party.Contains(playerCharacter))
+        public Character playerCharacter;
+        public List<Character> party;
+        public List<Character> enemies;
+
+        [FormerlySerializedAs("OnSkillAndTargetSelected")] public UnityEvent<BaseSkill, UUIDCharacterInstance> PlayerUsedSkillEvent = new();
+        public void SelectSkillAndTarget(BaseSkill skill, UUIDCharacterInstance target)
         {
-            party.Add(playerCharacter);
+            PlayerUsedSkillEvent?.Invoke(skill, target);
         }
 
-        // default to ExplorationState
-        EnterExplorationState();
-
-        // Register the callback for the BattleState input action
-        playerInput.Debug.BattleState.performed += EnterBattleState;
-    }
-
-
-    public void EnterExplorationState()
-    {
-        if (stateMachine.GetCurrentState() is ExplorationState)
+        private void Awake()
         {
-            Debug.Log("Already in exploration state.");
-            return;
+            playerInput = new PlayerInput();
+            stateMachine = new StateMachine<IState>();
+            if (!party.Contains(playerCharacter))
+            {
+                party.Add(playerCharacter);
+            }
+
+            // default to ExplorationState
+            EnterExplorationState();
+
+            // Register the callback for the BattleState input action
+            playerInput.Debug.BattleState.performed += EnterBattleState;
         }
-        stateMachine.SetState(new ExplorationState(this, playerInput));
-    }
 
-    private void Update()
-    {
-        stateMachine.Tick();
-    }
 
-    private void EnterBattleState(InputAction.CallbackContext ctx)
-    {
-        if (stateMachine.GetCurrentState() is BattleState)
+        public void EnterExplorationState()
         {
-            Debug.Log("Already in battle state.");
-            return;
+            if (stateMachine.GetCurrentState() is ExplorationState)
+            {
+                Debug.Log("Already in exploration state.");
+                return;
+            }
+            stateMachine.SetState(new ExplorationState(this, playerInput));
         }
-        // TODO: set these values based on the encounter
-        stateMachine.SetState(new BattleState(this, party, enemies, true, 1));
-    }
 
-    private void OnEnable()
-    {
-        playerInput.Enable();
-    }
+        private void Update()
+        {
+            if (stateMachine != null)
+                stateMachine.Tick();
+        }
 
-    private void OnDisable()
-    {
-        playerInput.Disable();
+        private void EnterBattleState(InputAction.CallbackContext ctx)
+        {
+            if (stateMachine.GetCurrentState() is BattleState)
+            {
+                Debug.Log("Already in battle state.");
+                return;
+            }
+            // TODO: set these values based on the encounter
+            stateMachine.SetState(new BattleState(this, party, enemies, true, 1));
+        }
+
+        private void OnEnable()
+        {
+            if (playerInput != null)
+                playerInput.Enable();
+        }
+
+        private void OnDisable()
+        {
+            if (playerInput != null)
+                playerInput.Disable();
+        }
     }
 }
