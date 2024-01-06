@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using BattleSystem.ScriptableObjects.Characters;
 using BattleSystem.ScriptableObjects.Skills;
+using Player.Inventory;
 using Player.PlayerStates;
 using UnityEngine;
 using UnityEngine.Events;
@@ -17,6 +18,7 @@ namespace Player
         private PlayerInput playerInput;
 
         public Character playerCharacter;
+        public PlayerInventory playerInventory { get; private set; }
         public List<Character> party;
         public List<Character> enemies;
 
@@ -47,6 +49,9 @@ namespace Player
 
             // Register the callback for the BattleState input action
             playerInput.Debug.BattleState.performed += EnterBattleState;
+            
+            // TODO: load this from a file
+            playerInventory = new PlayerInventory();
         }
 
 

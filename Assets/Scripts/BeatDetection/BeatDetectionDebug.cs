@@ -8,7 +8,7 @@ namespace BeatDetection
         private void Start()
         {
             MyAudioManager.Instance.beatWindowLogic.BeatResultEvent += OnBeatResult;
-            MyAudioManager.Instance.beatScheduler.scheduleFunction(() => Debug.Log("scheduled function"), 4);
+            MyAudioManager.Instance.beatScheduler.ScheduleFunction(() => Debug.Log("scheduled function"), 4);
         }
 
         private void OnBeatResult(BeatResult beatResult)

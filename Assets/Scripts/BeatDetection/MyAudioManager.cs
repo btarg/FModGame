@@ -64,6 +64,7 @@ namespace BeatDetection
         {
             stopMusic();
             currentMusicEvent = new EasyEvent(musicEventPath, listeners);
+            currentMusicEvent.start();
         }
 
         public void setPaused(bool paused)

@@ -21,7 +21,9 @@ namespace BeatDetection
         private float initialOffset;
 
         private int lastBeat;
-        private float lastBeatTime;
+        public float nextBeatTime { get; private set; }
+        public float lastBeatTime { get; private set; }
+        public float lastBeatDuration { get; private set; }
     
         public event BeatResultEventHandler BeatResultEvent;
 
@@ -34,10 +36,11 @@ namespace BeatDetection
         public void OnBeat(EasyEvent audioEvent)
         {
             float beatLength = audioEvent.BeatLength();
-            float nextBeatTime = lastBeatTime + beatLength;
+            nextBeatTime = lastBeatTime + beatLength;
             beatTimelinePositions.Add(nextBeatTime);
             beatTimelinePositions.Add(Time.time);
             lastBeatTime = nextBeatTime;
+            lastBeatDuration = beatLength;
 
             foreach (BeatCooldownData cooldown in cooldowns) cooldown.cooldownBeat = audioEvent.CurrentBeat;
 

@@ -11,33 +11,32 @@ namespace BeatDetection
 
         public void OnBeat(EasyEvent audioEvent)
         {
-            int queueCount = actionQueue.Count;
-
-            for (int i = 0; i < queueCount; i++)
+            while (actionQueue.Count > 0)
             {
-                ScheduledAction scheduledAction = actionQueue.Peek(); // Peek instead of Dequeue
+                ScheduledAction scheduledAction = actionQueue.Peek();
 
-                if (scheduledAction.RemainingBeats > 0)
+                // Decrement the remaining beats directly
+                scheduledAction.RemainingBeats--;
+
+                // Execute the action if there are no remaining beats
+                if (scheduledAction.RemainingBeats == 0)
                 {
-                    // Decrement the remaining beats directly
-                    scheduledAction.RemainingBeats--;
-
-                    // Execute the action if there are no remaining beats
-                    if (scheduledAction.RemainingBeats == 0) scheduledAction.Action.Invoke();
+                    scheduledAction.Action.Invoke();
+                    actionQueue.Dequeue();
                 }
                 else
                 {
-                    // Remove the action from the queue if there are no remaining beats
-                    actionQueue.Dequeue();
+                    // If the first action in the queue still has remaining beats, break the loop
+                    break;
                 }
             }
         }
 
-        public void scheduleFunction(Action action, int beats)
+        public void ScheduleFunction(Action action, int beats)
         {
             actionQueue.Enqueue(new ScheduledAction(action, beats));
         }
-   
+
 
         private class ScheduledAction
         {
