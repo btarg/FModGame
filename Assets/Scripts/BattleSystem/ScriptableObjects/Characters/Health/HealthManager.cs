@@ -37,7 +37,7 @@ namespace BattleSystem.ScriptableObjects.Characters
         public void InitStats(CharacterStats _stats, string _UUID)
         {
             isAlive = true;
-            stats = _stats;
+            stats = Instantiate(_stats);
             UUID = _UUID;
         }
 

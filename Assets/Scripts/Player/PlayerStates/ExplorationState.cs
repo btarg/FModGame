@@ -33,7 +33,7 @@ public class ExplorationState : IState
 
     [Header("Camera Settings")]
     public float normalFOV = 40f;
-    public float runningFOV = 45f;
+    public float runningFOV = 30f;
     public float fovChangeDuration = 0.5f;
     CinemachineStateDrivenCamera stateDrivenCamera;
 
@@ -47,11 +47,11 @@ public class ExplorationState : IState
 
     Vector3 lastMovementDirection;
 
-    public ExplorationState(PlayerController _playerController, PlayerInput _playerInput)
+    public ExplorationState(PlayerController playerController, PlayerInput playerInput)
     {
-        this.characterController = _playerController.gameObject.GetComponent<CharacterController>();
-        this.animator = _playerController.gameObject.GetComponent<Animator>();
-        this.playerInput = _playerInput;
+        characterController = playerController.gameObject.GetComponent<CharacterController>();
+        animator = playerController.gameObject.GetComponent<Animator>();
+        this.playerInput = playerInput;
     }
 
     public void OnEnter()
@@ -103,12 +103,12 @@ public class ExplorationState : IState
                 : Mathf.Max(currentSpeed - deceleration * Time.deltaTime, 0);
         }
 
-        cameraRelativeMovement = lastMovementDirection * currentSpeed * Time.deltaTime;
+        cameraRelativeMovement = lastMovementDirection * (currentSpeed * Time.deltaTime);
         cameraRelativeMovement.y = verticalMovement;
         characterController.Move(cameraRelativeMovement);
 
         // Get the reference to the CinemachineVirtualCamera at runtime
-        this.stateDrivenCamera = Camera.main.gameObject.GetComponent<CinemachineBrain>().ActiveVirtualCamera as CinemachineStateDrivenCamera;
+        stateDrivenCamera = Camera.main.gameObject.GetComponent<CinemachineBrain>().ActiveVirtualCamera as CinemachineStateDrivenCamera;
         CinemachineFreeLook virtualCamera = stateDrivenCamera.LiveChild as CinemachineFreeLook;
         // Change FOV based on running or walking
         if (virtualCamera != null)

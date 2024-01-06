@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 868fe169bd4078b42b9d02504b402f1d, type: 3}
   m_Name: ExampleFireCharacterStats
   m_EditorClassIdentifier: 
-  HP: 30
-  SP: 20
+  HP: 20
+  SP: 50
   ATK: 10
   DEF: 0
   EVD: 0.05

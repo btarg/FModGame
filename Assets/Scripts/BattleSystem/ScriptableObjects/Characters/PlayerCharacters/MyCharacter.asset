@@ -18,8 +18,7 @@ MonoBehaviour:
   attackSkill: {fileID: 11400000, guid: eb5fd6ed6649a2f4b870e31efb89f290, type: 2}
   AvailableSkills:
   - {fileID: 11400000, guid: 5e6b55b050dadcf44ac4b779f03dcf0e, type: 2}
-  - {fileID: 11400000, guid: 28aae8ec915844b4b9b673257f38e20c, type: 2}
-  - {fileID: 11400000, guid: a817c179c6460bd4a8a68edaf77de9f0, type: 2}
+  - {fileID: 11400000, guid: 12df987ba187c534cac4f4b4626121bd, type: 2}
   HealthManager: {fileID: 11400000, guid: f8b28ffead158674fb146199a7d737c6, type: 2}
   IsPlayerCharacter: 1
   prefab: {fileID: 4115895661672177110, guid: a65f9e80e9260714d85417f54f754e63, type: 3}

@@ -1,22 +1,24 @@
 using System;
-using System.Collections;
 using UnityEngine;
 using System.Collections.Generic;
 using BattleSystem.ScriptableObjects.Characters;
 using BattleSystem.ScriptableObjects.Skills;
 using Cinemachine;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using BattleSystem;
 using Player;
 using UnityEngine.InputSystem;
 using Object = UnityEngine.Object;
+using UnityEngine.UI;
+using TMPro;
 
 public enum PlayerBattleState
 {
+    Waiting,
     Targeting,
-    SelectingSkill
+    SelectingSkill,
+    Attacking
 }
 
 public class BattleState : IState
@@ -37,13 +39,12 @@ public class BattleState : IState
 
     // Targeting system
     private PlayerBattleState playerTurnState;
-    private List<GameObject> enemyGameObjects;
+    private Dictionary<UUIDCharacterInstance, GameObject> characterGameObjects;
     private List<Transform> enemyPositions;
     private List<Transform> playerPositions;
-    private GameObject selectedTarget;
+    private List<GameObject> selectedTargets;
     private int selectedTargetIndex;
-
-    private float scrollTimer = 0f;
+    
     private float scrollDelay = 0.2f;
     
     private int currentArena;
@@ -52,7 +53,9 @@ public class BattleState : IState
     private List<Transform> shuffledEnemyPositions;
     private bool isScrolling;
     private Character currentPlayerCharacter;
-
+    private BaseSkill selectedSkill;
+    private Canvas battleCanvas;
+    private TextMeshProUGUI healthText;
 
     public BattleState(PlayerController _playerController, List<Character> _party, List<Character> _enemies, bool _ambush, int _arena)
     {
@@ -76,11 +79,32 @@ public class BattleState : IState
         SetupEventListeners();
 
         stateDrivenCamera = Camera.main.gameObject.GetComponent<CinemachineBrain>().ActiveVirtualCamera as CinemachineStateDrivenCamera;
-        stateDrivenCamera.m_AnimatedTarget.SetBool(inBattle, true);
+        if (stateDrivenCamera != null) stateDrivenCamera.m_AnimatedTarget.SetBool(inBattle, true);
+        
+        // get canvas by tag and set it active
+        battleCanvas = GameObject.FindWithTag("BattleCanvas").GetComponent<Canvas>();
+        battleCanvas.enabled = true;
+        
+        // Set up UI buttons with skills
+        // TODO: move this to a separate script
+        var buttons = battleCanvas.GetComponentsInChildren<Button>();
+        var texts = battleCanvas.GetComponentsInChildren<TextMeshProUGUI>();
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            var button = buttons[i];
+            var text = texts[i];
+            var skill = playerCharacter.Character.AvailableSkills[i];
+            button.onClick.AddListener(() => SelectSkill(skill));
+            text.text = skill.name;
+        }
+        
     }
 
     private void SetupEventListeners()
     {
+        playerController.SelectSkillEvent.AddListener(SelectSkill);
+        playerController.PlayerUsedSkillEvent.AddListener(PlayerUseSkill);
+        
         foreach (var uUIDCharacter in allCharacters)
         {
             uUIDCharacter.Character.HealthManager.OnRevive.AddListener(OnCharacterRevived);
@@ -135,6 +159,7 @@ public class BattleState : IState
                 GameObject.Destroy(deadCharacterObject);
             }
             turnOrder.Remove(deadCharacter);
+            characterGameObjects.Remove(deadCharacter);
 
             deadCharacter.Character.HealthManager.OnRevive.RemoveListener(OnCharacterDeath);
             Debug.Log($"{deadCharacter.Character.DisplayName} has died! UUID: {deadCharacter.UUID}");
@@ -154,7 +179,7 @@ public class BattleState : IState
 
     public void SpawnCharacters(int arena)
     {
-        enemyGameObjects = new List<GameObject>();
+        characterGameObjects = new();
         // Ensure the arena number is valid
         if (arena < 0 || arena >= ArenaManager.Instance.PlayerPositions.Count || arena >= ArenaManager.Instance.EnemyPositions.Count)
         {
@@ -182,10 +207,7 @@ public class BattleState : IState
         GameObject characterGameObject = Object.Instantiate(characterInstance.Character.prefab, spawnMarker.position, spawnMarker.rotation);
         // associate this character with a GUID
         characterGameObject.name = characterInstance.UUID;
-        if (!characterInstance.Character.IsPlayerCharacter)
-        {
-            enemyGameObjects.Add(characterGameObject);
-        }
+        characterGameObjects.Add(characterInstance, characterGameObject);
     }
 
     private List<Transform> Shuffle(List<Transform> toShuffle)
@@ -206,7 +228,7 @@ public class BattleState : IState
     public void OnEnter()
     {
         // default to first state
-        playerTurnState = PlayerBattleState.Targeting;
+        playerTurnState = PlayerBattleState.Waiting;
 
         // First arena is 1
         if (currentArena < 1)
@@ -245,31 +267,112 @@ public class BattleState : IState
         playerInput.UI.Enable();
 
         playerController.PlayerUsedSkillEvent.AddListener(PlayerUseSkill);
-
-        selectedTarget = enemyGameObjects[0];
+        selectedTargets = new List<GameObject> { characterGameObjects.Values.FirstOrDefault() };
         selectedTargetIndex = 0;
-
+        
         // TODO: awful debug code, remove this later
         playerInput.Debug.Skill1.performed += _ =>
         {
-            if (isPlayerTurn)
+            if (isPlayerTurn && playerTurnState == PlayerBattleState.Targeting && isWaitingForPlayerInput)
             {
-                UUIDCharacterInstance target = turnOrder.FirstOrDefault(c => !c.Character.IsPlayerCharacter);
-                if (target != null)
-                {
-                    PlayerUseSkill(playerCharacter.Character.AvailableSkills[0], target);
-                }
+                PlayerUseSkill();
             }
         };
         playerInput.UI.Select.started += StartScrolling;
         playerInput.UI.Select.canceled += StopScrolling;
+        playerInput.UI.Submit.performed += TargetSelected;
+        playerInput.UI.Cancel.performed += GoBack;
 
     }
+
+    private void PlayerUseSkill()
+    {
+        foreach (GameObject selectedTarget in selectedTargets)
+        {
+            var targetCharacter = characterGameObjects.FirstOrDefault(x => x.Value == selectedTarget).Key;
+            selectedSkill.Use(playerCharacter, targetCharacter);
+        }
+        isWaitingForPlayerInput = false;
+        playerTurnState = PlayerBattleState.Waiting;
+        selectedTargets.Clear();
+        NextTurn();
+    }
+
+    private void GoBack(InputAction.CallbackContext obj)
+    {
+        if (isPlayerTurn && playerTurnState == PlayerBattleState.Targeting && isWaitingForPlayerInput)
+        {
+            playerTurnState = PlayerBattleState.SelectingSkill;
+            foreach (var target in selectedTargets)
+            {
+                var healthText = target.GetComponentInChildren<TextMeshProUGUI>();
+                healthText.enabled = false;
+            }
+            
+            selectedTargets.Clear();
+            selectedSkill = null;
+        }
+    }
+
+    private void SelectSkill(BaseSkill skill)
+    {
+        if (playerTurnState == PlayerBattleState.SelectingSkill)
+        {
+            selectedSkill = skill;
+            selectedTargets.Clear();
+            if (selectedSkill.TargetsAll)
+            {
+                var targetList = new List<GameObject>();
+                if (selectedSkill.CanTargetEnemies)
+                {
+                    // add all enemies to list of targets
+                    targetList.AddRange(characterGameObjects.Where(c => !c.Key.Character.IsPlayerCharacter).Select(c => c.Value));
+                }
+                if (selectedSkill.CanTargetAllies)
+                {
+                    // add all allies to list of targets
+                    targetList.AddRange(characterGameObjects.Where(c => c.Key.Character.IsPlayerCharacter).Select(c => c.Value));
+                }
+
+                foreach (var target in targetList)
+                {
+                    var healthText = target.GetComponentInChildren<TextMeshProUGUI>();
+                    healthText.enabled = true;
+                    healthText.text = characterGameObjects.FirstOrDefault(x => x.Value == target).Key.Character.HealthManager.CurrentHP.ToString();
+                    selectedTargets.Add(target);
+                
+                }
+            }
+            
+            // set selected target to the first enemy in the list if the current selected skill targets enemies
+            else if (selectedSkill.CanTargetEnemies)
+            {
+                selectedTargets.Insert(0, characterGameObjects.FirstOrDefault(c => !c.Key.Character.IsPlayerCharacter).Value);
+            }
+            else
+            {
+                // otherwise set it to the player character
+                selectedTargets.Insert(0, characterGameObjects[playerCharacter]);
+            }
+            playerTurnState = PlayerBattleState.Targeting;
+            
+        }
+    }
+
+    private void TargetSelected(InputAction.CallbackContext ctx)
+    {
+        if (isPlayerTurn && playerTurnState == PlayerBattleState.Targeting && isWaitingForPlayerInput && selectedTargets.Count >= 1)
+        {
+            playerTurnState = PlayerBattleState.SelectingSkill;
+        }
+
+    }
+
     private void StartScrolling(InputAction.CallbackContext ctx)
     {
-        if (playerTurnState != PlayerBattleState.Targeting || !isWaitingForPlayerInput || enemyGameObjects.Count < 1 || isScrolling)
+        if (playerTurnState != PlayerBattleState.Targeting || !isWaitingForPlayerInput || characterGameObjects.Count < 1 || isScrolling || selectedSkill.TargetsAll)
             return;
-
+        
         isScrolling = true;
         Vector2 direction = ctx.ReadValue<Vector2>();
     
@@ -290,26 +393,62 @@ public class BattleState : IState
         }
     }
 
+    private Dictionary<UUIDCharacterInstance, GameObject> GetTargetableObjects()
+    {
+        var targetableObjects = new Dictionary<UUIDCharacterInstance, GameObject>(characterGameObjects);
+        if (!selectedSkill.CanTargetEnemies)
+        {
+            foreach (var characterGameObject in characterGameObjects)
+            {
+                if (!characterGameObject.Key.Character.IsPlayerCharacter)
+                {
+                    targetableObjects.Remove(characterGameObject.Key);
+                }
+            }
+        }
+        if (!selectedSkill.CanTargetAllies)
+        {
+            foreach (var characterGameObject in characterGameObjects)
+            {
+                if (characterGameObject.Key.Character.IsPlayerCharacter)
+                {
+                    targetableObjects.Remove(characterGameObject.Key);
+                }
+            }
+        }
+
+        return targetableObjects;
+    }
+    
     private async void Scroll(Vector2 direction)
     {
+        var targetableObjects = GetTargetableObjects();
+        
         while (isScrolling)
         {
+            if (healthText != null)
+            {
+                // disable previous healthtext
+                healthText.enabled = false;
+            }
             int increment = (direction.x < 0 || direction.y > 0) ? -1 : 1;
 
             selectedTargetIndex += increment;
-            while (selectedTargetIndex >= 0 && selectedTargetIndex < enemyGameObjects.Count && enemyGameObjects[selectedTargetIndex] == null)
+            while (selectedTargetIndex >= 0 && selectedTargetIndex < targetableObjects.Count && targetableObjects.Values.ElementAt(selectedTargetIndex) == null)
             {
                 selectedTargetIndex += increment;
             }
 
-            if (selectedTargetIndex < 0 || selectedTargetIndex >= enemyGameObjects.Count)
-                selectedTargetIndex = (increment == 1) ? 0 : enemyGameObjects.Count - 1;
+            if (selectedTargetIndex < 0 || selectedTargetIndex >= targetableObjects.Count)
+                selectedTargetIndex = (increment == 1) ? 0 : targetableObjects.Count - 1;
 
-            selectedTarget = enemyGameObjects[selectedTargetIndex];
-
-            Debug.Log("Selected target: " + selectedTarget.name);
-            // TODO: move the target indicator to the selected target
-
+            selectedTargets[0] = targetableObjects.Values.ElementAt(selectedTargetIndex);
+            Debug.Log("Selected target: " + selectedTargets[0].name);
+            var selectedCharacter = targetableObjects.FirstOrDefault(x => x.Value == selectedTargets[0]).Key;
+            healthText = selectedTargets[0].GetComponentInChildren<TextMeshProUGUI>();
+            healthText.enabled = true;
+            healthText.text = selectedCharacter.Character.HealthManager.CurrentHP.ToString();
+            
             // Wait for a short delay before scrolling again
             await Task.Delay((int)(scrollDelay * 1000));
         }
@@ -318,18 +457,6 @@ public class BattleState : IState
     private void StopScrolling(InputAction.CallbackContext ctx)
     {
         isScrolling = false;
-    }
-
-    
-    private void PlayerUseSkill(BaseSkill skill, UUIDCharacterInstance target)
-    {
-        if (isWaitingForPlayerInput)
-        {
-            // Perform the selected skill on the selected target
-            skill.Use(playerCharacter, target);
-            isWaitingForPlayerInput = false;
-            NextTurn();
-        }
     }
 
     public void Tick()
@@ -357,16 +484,28 @@ public class BattleState : IState
             {
                 Debug.Log("It's the player's turn!");
                 isWaitingForPlayerInput = true;
+                playerTurnState = PlayerBattleState.SelectingSkill;
             }
 
             if (playerTurnState == PlayerBattleState.Targeting)
             {
-                Debug.DrawLine(Camera.main.transform.position, selectedTarget.transform.position, Color.red);
+                if (selectedTargets != null)
+                {
+                    foreach (var target in selectedTargets)
+                    {
+                        Debug.DrawLine(Camera.main.transform.position, target.transform.position, Color.red);
+                    }
+                    
+                }
+
+                if (battleCanvas != null)
+                    battleCanvas.enabled = false;
             }
             else if (playerTurnState == PlayerBattleState.SelectingSkill)
             {
-                
                 // TODO: logic for selecting a skill
+                if (battleCanvas != null)
+                    battleCanvas.enabled = true;
             }
 
         }
@@ -389,7 +528,20 @@ public class BattleState : IState
             // Remove battle state listeners
             healthManager.OnRevive.RemoveListener(OnCharacterRevived);
             healthManager.OnDeath.RemoveListener(OnCharacterDeath);
+            foreach (GameObject c in characterGameObjects.Values)
+            {
+                Object.Destroy(c);
+            }
+            characterGameObjects.Clear();
         }
+        allCharacters.Clear();
+        deadCharacters.Clear();
+        turnOrder.Clear();
+        playerInput.Disable();
+        playerInput.Dispose();
+        playerController.PlayerUsedSkillEvent.RemoveListener(PlayerUseSkill);
+        battleCanvas.enabled = false;
+        stateDrivenCamera.m_AnimatedTarget.SetBool(inBattle, false);
     }
 
     private void NextTurn()
@@ -401,15 +553,15 @@ public class BattleState : IState
     private void OnCharacterRevived(string uuid)
     {
         // add the character back to the turn order
-        var Character = deadCharacters.FirstOrDefault(c => c.UUID == uuid);
-        if (Character == null)
+        var character = deadCharacters.FirstOrDefault(c => c.UUID == uuid);
+        if (character == null)
         {
             Debug.LogError("Character not found");
             return;
         }
-        deadCharacters.Remove(Character);
-        turnOrder.Add(Character);
+        deadCharacters.Remove(character);
+        turnOrder.Add(character);
 
-        SpawnCharacter(Character, ArenaManager.Instance.PlayerPositions[currentArena].Positions, ArenaManager.Instance.EnemyPositions[currentArena].Positions, turnOrder.Count - 1);
+        SpawnCharacter(character, ArenaManager.Instance.PlayerPositions[currentArena].Positions, ArenaManager.Instance.EnemyPositions[currentArena].Positions, turnOrder.Count - 1);
     }
 }

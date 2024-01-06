@@ -19,10 +19,17 @@ namespace Player
         public List<Character> party;
         public List<Character> enemies;
 
-        [FormerlySerializedAs("OnSkillAndTargetSelected")] public UnityEvent<BaseSkill, UUIDCharacterInstance> PlayerUsedSkillEvent = new();
-        public void SelectSkillAndTarget(BaseSkill skill, UUIDCharacterInstance target)
+        public UnityEvent<BaseSkill> SelectSkillEvent = new();
+        public UnityEvent PlayerUsedSkillEvent = new();
+
+        public void UseSelectedSkill()
         {
-            PlayerUsedSkillEvent?.Invoke(skill, target);
+            PlayerUsedSkillEvent?.Invoke();
+        }
+
+        public void SelectSkill(BaseSkill skill)
+        {
+            SelectSkillEvent?.Invoke(skill);
         }
 
         private void Awake()

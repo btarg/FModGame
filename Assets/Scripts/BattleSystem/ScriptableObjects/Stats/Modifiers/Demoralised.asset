@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38cde559f5c7aee40b831714116c3685, type: 3}
   m_Name: Demoralised
   m_EditorClassIdentifier: 
-  DisplayName: Ego Death
   StatString: Demoralised
   StatModifiers:
   - StatType: 2
@@ -22,4 +21,4 @@ MonoBehaviour:
   - StatType: 4
     Multiplier: 0.5
   Duration: 3
-  CanStack: 1
+  CanStack: 0
