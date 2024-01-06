@@ -99,7 +99,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
+  m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -146,6 +146,7 @@ GameObject:
   - component: {fileID: 7595770936264482234}
   - component: {fileID: 4270730003564974952}
   - component: {fileID: 4580332068397329402}
+  - component: {fileID: 858347297767141844}
   m_Layer: 0
   m_Name: ExamplePlayerPrefab
   m_TagString: Player
@@ -242,6 +243,19 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &858347297767141844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4115895661672177110}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 743d6a88062a447993c77410cef9baaa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  healthText: {fileID: 7788298014699405970}
 --- !u!1 &9015283117054595403
 GameObject:
   m_ObjectHideFlags: 0
