@@ -14,12 +14,12 @@ namespace BattleSystem.ScriptableObjects.Characters
     {
         public bool isAlive = true;
 
-        [System.Serializable] public class OnDamagedEvent : UnityEvent<HealthManager, int> { }
-        [System.Serializable] public class OnStrengthEncounteredEvent : UnityEvent<ElementType, StrengthType> { }
-        [System.Serializable] public class OnWeaknessEncounteredEvent : UnityEvent<ElementType> { }
-        [System.Serializable] public class OnDamageEvadedEvent : UnityEvent { }
-        [System.Serializable] public class OnDeathEvent : UnityEvent<string> { }
-        [System.Serializable] public class OnReviveEvent : UnityEvent<string> { }
+        public class OnDamagedEvent : UnityEvent<HealthManager, int> { }
+        public class OnStrengthEncounteredEvent : UnityEvent<ElementType, StrengthType> { }
+        public class OnWeaknessEncounteredEvent : UnityEvent<ElementType> { }
+        public class OnDamageEvadedEvent : UnityEvent { }
+        public class OnDeathEvent : UnityEvent<string> { }
+        public class OnReviveEvent : UnityEvent<string> { }
 
         public int critDamageMultiplier = 2;
         public OnDamagedEvent OnDamage = new();
@@ -39,6 +39,9 @@ namespace BattleSystem.ScriptableObjects.Characters
             isAlive = true;
             stats = Instantiate(_stats);
             UUID = _UUID;
+            // initialise max HP and SP
+            MaxHP = stats.HP;
+            MaxSP = stats.SP;
         }
 
         private int GetCurrentStat(StatType statType)
@@ -82,8 +85,8 @@ namespace BattleSystem.ScriptableObjects.Characters
             get { return GetCurrentStatFloat(StatType.EVD); }
         }
 
-        public int MaxHP => stats.MaxHP;
-        public int MaxSP => stats.MaxSP;
+        public int MaxHP;
+        public int MaxSP;
 
         public void TakeDamage(HealthManager attacker, int damage, ElementType elementType)
         {
@@ -144,13 +147,14 @@ namespace BattleSystem.ScriptableObjects.Characters
 
         public void Heal(int amount)
         {
+            if (!isAlive) return;
+            Debug.Log($"Healing {amount}/{MaxHP} HP");
             CurrentHP = Mathf.Min(CurrentHP + amount, MaxHP);
         }
 
         public void ChangeSP(int amount)
         {
             CurrentSP = Mathf.Max(Mathf.Min(CurrentSP + amount, MaxSP), 0);
-            
         }
         public void RemoveAllStatModifiers()
         {

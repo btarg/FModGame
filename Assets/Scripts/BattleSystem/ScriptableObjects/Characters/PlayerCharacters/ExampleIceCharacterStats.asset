@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ExampleIceCharacterStats
   m_EditorClassIdentifier: 
   HP: 100
-  SP: 20
+  SP: 100
   ATK: 1
   DEF: 0.1
   EVD: 0.1

@@ -161,7 +161,7 @@ namespace Player.PlayerStates
                 GameObject deadCharacterObject = GameObject.Find(uuid);
                 if (deadCharacterObject != null)
                 {
-                    GameObject.Destroy(deadCharacterObject);
+                    Object.Destroy(deadCharacterObject);
                 }
                 turnOrder.Remove(deadCharacter);
                 characterGameObjects.Remove(deadCharacter);
