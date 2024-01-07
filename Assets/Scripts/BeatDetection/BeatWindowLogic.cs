@@ -26,12 +26,7 @@ namespace BeatDetection
         public float lastBeatDuration { get; private set; }
     
         public event BeatResultEventHandler BeatResultEvent;
-
-        public void OnTick(EasyEvent audioEvent)
-        {
-            // Remove any cooldowns that have expired
-            cooldowns.RemoveAll(cooldown => Time.time - cooldown.cooldownStartTime >= cooldownDuration || audioEvent.CurrentBeat > cooldown.cooldownBeat);
-        }
+        
 
         public void OnBeat(EasyEvent audioEvent)
         {
@@ -42,9 +37,15 @@ namespace BeatDetection
             lastBeatTime = nextBeatTime;
             lastBeatDuration = beatLength;
 
-            foreach (BeatCooldownData cooldown in cooldowns) cooldown.cooldownBeat = audioEvent.CurrentBeat;
+            foreach (BeatCooldownData cooldown in cooldowns)
+            {
+                cooldown.cooldownBeat = audioEvent.CurrentBeat;
+            }
 
             lastBeat = audioEvent.CurrentBeat;
+            
+            // Remove any cooldowns that have expired
+            cooldowns.RemoveAll(cooldown => Time.time - cooldown.cooldownStartTime >= cooldownDuration || audioEvent.CurrentBeat > cooldown.cooldownBeat);
         }
 
         // Get the result of the current beat. If an ID is specified, a cooldown will be applied to prevent multiple results from being returned in quick succession.

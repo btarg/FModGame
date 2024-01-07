@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
-using DG.Tweening;
 using System;
 using BeatDetection.DataStructures;
+using DG.Tweening;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
@@ -12,94 +12,103 @@ namespace BeatDetection.QTE
         public GameObject outerCircle;
         public GameObject innerCircle;
         private PlayerInput playerInput;
-        private bool canInputQTE = false;
+        private bool canInputQTE;
+        
+        Sequence sequence;
         
         public float inputWindow = 0.5f;
         private Action<BeatResult> callback;
+        
+        private bool hasInvoked = false;
 
         private void Awake()
         {
-            outerCircle.SetActive(false);
-            innerCircle.SetActive(false);
+            Reset();
             playerInput = new PlayerInput();
             playerInput.Enable();
             playerInput.UI.Submit.performed += OnQTEButtonPressed;
-        }
-
-        private void Start()
-        {
-            MyAudioManager.Instance.beatScheduler.ScheduleFunction(() => StartQTE(4, (result) => helloWorld(result)), 6);
-        }
-
-        private void helloWorld(BeatResult result)
-        {
-            Debug.Log("Hello world! The result was: " + result);
+            sequence = DOTween.Sequence();
         }
         
         private void OnQTEButtonPressed(InputAction.CallbackContext ctx)
         {
-            if (!(outerCircle.activeSelf && innerCircle.activeSelf))
+            if (outerCircle.activeSelf && innerCircle.activeSelf)
             {
-                return;
+                if (canInputQTE)
+                {
+                    var result = MyAudioManager.Instance.beatWindowLogic.getBeatResult("QTE", false);
+                    Debug.Log($"QTE result: {result}");
+                    callback?.Invoke(result);
+                }
+                else
+                {
+                    Debug.Log("Out of the input window!");
+                    callback?.Invoke(BeatResult.Missed);
+                }
+                hasInvoked = true;
             }
-            Debug.Log("QTE button pressed!");
-
-            if (canInputQTE)
-            {
-                var result = MyAudioManager.Instance.beatWindowLogic.getBeatResult("QTE", false);
-                callback?.Invoke(result);
-            }
-            else
-            {
-                Debug.Log("Out of the input window!");
-            }
-
-            canInputQTE = false;
-            outerCircle.SetActive(false);
-            innerCircle.SetActive(false);
+            Reset();
         }
 
-        private void StartQTE(int totalBeats, Action<BeatResult> functionToRun = null)
+        public void StartQTE(int totalBeats, Action<BeatResult> functionToRun = null)
         {
             if (functionToRun == null) return;
             callback = functionToRun;
             var beatWindowLogic = MyAudioManager.Instance.beatWindowLogic;
-
-            // Calculate the target scale
-            Vector3 targetScale = innerCircle.transform.localScale;
+            
+            // TODO: improve the accuracy
+            var targetScale = inputWindow;
+            
             outerCircle.SetActive(true);
             innerCircle.SetActive(true);
-
-            // Calculate the delay before enabling QTE input
-            float delayBeforeInput = (beatWindowLogic.lastBeatDuration * totalBeats) - inputWindow;
+            
+            float tweenDuration = (beatWindowLogic.lastBeatDuration * totalBeats);
+            float delayBeforeInput = tweenDuration - inputWindow;
             
             // Schedule the function to enable QTE input
             Invoke(nameof(EnableQTEInput), delayBeforeInput);
-
+            
             // Start the QTE by shrinking the outer circle to the size of the inner circle over the duration of a beat
-            float tweenDuration = beatWindowLogic.lastBeatDuration * totalBeats;
-            outerCircle.transform.DOScale(targetScale, tweenDuration).onComplete += () =>
+            // We want the circles to overlap for the duration of the beat
+            Tween tween = outerCircle.transform.DOScale(targetScale, tweenDuration);
+            sequence = DOTween.Sequence();
+            sequence.Append(tween).onComplete += () =>
             {
-                // Start a fade out animation instead of deactivating the circles immediately
-                float fadeDuration = 0.5f; // Adjust this to control the speed of the fade out
-                outerCircle.GetComponent<Image>().material.DOFade(0, fadeDuration);
-                innerCircle.GetComponent<Image>().material.DOFade(0, fadeDuration).onComplete += () =>
+                outerCircle.GetComponent<Image>().material.DOFade(0, 0.1f);
+                // keep shrinking the inner circle until it disappears
+                outerCircle.transform.DOScale(0, 0.1f);
+                innerCircle.GetComponent<Image>().material.DOFade(0, 0.1f).onComplete += () =>
                 {
                     outerCircle.SetActive(false);
                     innerCircle.SetActive(false);
                     // Reset the alpha to 1 for the next QTE
                     outerCircle.GetComponent<Image>().material.color = new Color(1, 1, 1, 1);
                     innerCircle.GetComponent<Image>().material.color = new Color(1, 1, 1, 1);
+                    
+                    if (!hasInvoked)
+                    {
+                        callback?.Invoke(BeatResult.Missed);
+                    }
+                    
+                    Reset();
                 };
-
-                // we can still input shortly after so wait until the next beat to disable input
-                MyAudioManager.Instance.beatScheduler.ScheduleFunction(() => canInputQTE = false, 1);
             };
         }
 
         private void EnableQTEInput()
         {
             canInputQTE = true;
+        }
+
+        private void Reset()
+        {
+            canInputQTE = false;
+            outerCircle.SetActive(false);
+            innerCircle.SetActive(false);
+            innerCircle.transform.localScale = new Vector3(1, 1, 1);
+            outerCircle.transform.localScale = new Vector3(4, 4, 1);
+            hasInvoked = false;
+            sequence.Kill();
         }
     }
 }

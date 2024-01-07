@@ -1,10 +1,7 @@
 {
-    "name": "Project.BeatDetection",
+    "name": "Project.Input",
     "rootNamespace": "",
     "references": [
-        "GUID:be31af933c94cd74db917b5d0d30169f",
-        "GUID:0c752da273b17c547ae705acf0f2adf2",
-        "GUID:028f802e89da8304abd8a6a7d6b76560",
         "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
     "includePlatforms": [],

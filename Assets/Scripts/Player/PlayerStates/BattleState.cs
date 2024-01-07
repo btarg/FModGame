@@ -6,6 +6,8 @@ using BattleSystem;
 using BattleSystem.ScriptableObjects.Characters;
 using BattleSystem.ScriptableObjects.Skills;
 using BattleSystem.UI;
+using BeatDetection;
+using BeatDetection.DataStructures;
 using Cinemachine;
 using TMPro;
 using UnityEngine;
@@ -54,10 +56,13 @@ namespace Player.PlayerStates
         private static readonly int inBattle = Animator.StringToHash("inBattle");
         private List<Transform> shuffledEnemyPositions;
         private bool isScrolling;
+        
         private Character currentPlayerCharacter;
+        
+        
         private BaseSkill selectedSkill;
         private Canvas battleCanvas;
-        public BattleState(PlayerController _playerController, List<Character> _party, List<Character> _enemies, bool _ambush, int _arena)
+        public BattleState(PlayerController _playerController, List<Character> _party, List<Character> _enemies, bool _ambush = false, int _arena = 1)
         {
             currentArena = _arena;
             playerController = _playerController;
@@ -86,7 +91,7 @@ namespace Player.PlayerStates
             battleCanvas.enabled = true;
         
             // Set up UI buttons with skills
-            // TODO: move this to a separate script
+            // TODO: move this to a proper UI canvas separate of the player
             var buttons = battleCanvas.GetComponentsInChildren<Button>();
             var texts = battleCanvas.GetComponentsInChildren<TextMeshProUGUI>();
             for (int i = 0; i < buttons.Length; i++)
@@ -94,7 +99,7 @@ namespace Player.PlayerStates
                 var button = buttons[i];
                 var text = texts[i];
                 var skill = playerCharacter.Character.AvailableSkills[i];
-                button.onClick.AddListener(() => SelectSkill(skill));
+                button.onClick.AddListener(() => playerController.SelectSkill(skill));
                 text.text = skill.name;
             }
         
@@ -103,8 +108,7 @@ namespace Player.PlayerStates
         private void SetupEventListeners()
         {
             playerController.SelectSkillEvent.AddListener(SelectSkill);
-            playerController.PlayerUsedSkillEvent.AddListener(PlayerUseSkill);
-        
+            
             foreach (var uUIDCharacter in allCharacters)
             {
                 uUIDCharacter.Character.HealthManager.OnRevive.AddListener(OnCharacterRevived);
@@ -267,7 +271,6 @@ namespace Player.PlayerStates
             playerInput.Debug.Enable();
             playerInput.UI.Enable();
 
-            playerController.PlayerUsedSkillEvent.AddListener(PlayerUseSkill);
             selectedTargets = new List<GameObject> { characterGameObjects.Values.FirstOrDefault() };
             selectedTargetIndex = 0;
             
@@ -278,13 +281,22 @@ namespace Player.PlayerStates
 
         }
 
-        private void PlayerUseSkill()
+        private void PlayerUseSkill(BeatResult result = BeatResult.Good)
         {
-            foreach (GameObject selectedTarget in selectedTargets)
+            if (result != BeatResult.Missed && result != BeatResult.Mashed)
             {
-                var targetCharacter = characterGameObjects.FirstOrDefault(x => x.Value == selectedTarget).Key;
-                selectedSkill.Use(playerCharacter, targetCharacter);
+                foreach (GameObject selectedTarget in selectedTargets)
+                {
+                    var targetCharacter = characterGameObjects.FirstOrDefault(x => x.Value == selectedTarget).Key;
+                    selectedSkill.Use(playerCharacter, targetCharacter);
+                }
             }
+            else
+            {
+                Debug.Log("Missed the attack!");
+            }
+            playerController.UseSelectedSkill(result);
+
             isWaitingForPlayerInput = false;
             playerTurnState = PlayerBattleState.Waiting;
             selectedTargets.Clear();
@@ -349,7 +361,7 @@ namespace Player.PlayerStates
             foreach (var target in characterGameObjects)
             {
                 var characterHealthUI = target.Value.GetComponentInChildren<CharacterHealthUI>();
-                if (characterHealthUI == null) continue;
+                if (!characterHealthUI) continue;
                 
                 if (selectedTargets.Contains(target.Value))
                 {
@@ -366,10 +378,14 @@ namespace Player.PlayerStates
         {
             if (isPlayerTurn && playerTurnState == PlayerBattleState.Targeting && isWaitingForPlayerInput)
             {
-                // TODO: PlayerUseSkill should be called from an event elsewhere once we have completed our animation and QTE/minigame
-                PlayerUseSkill();
+                // TODO: spawn the correct QTE for the selected skill
+                playerTurnState = PlayerBattleState.Attacking;
+                void UseSkillAction() => playerController.simpleQTE.StartQTE(4, (result) =>
+                {
+                    PlayerUseSkill(result);
+                });
+                MyAudioManager.Instance.beatScheduler.RunOnNextBeat(UseSkillAction);
             }
-
         }
 
         private void StartScrolling(InputAction.CallbackContext ctx)
@@ -526,18 +542,24 @@ namespace Player.PlayerStates
                 // Remove battle state listeners
                 healthManager.OnRevive.RemoveListener(OnCharacterRevived);
                 healthManager.OnDeath.RemoveListener(OnCharacterDeath);
+                // Remove this character's game object
                 foreach (GameObject c in characterGameObjects.Values)
                 {
                     Object.Destroy(c);
                 }
-                characterGameObjects.Clear();
+
+                if (characterInstance.Character.IsPlayerCharacter)
+                {
+                    // save the player characters' stats for out of battle
+                    playerController.playerCharacter = characterInstance.Character;
+                }
             }
+            characterGameObjects.Clear();
             allCharacters.Clear();
             deadCharacters.Clear();
             turnOrder.Clear();
             playerInput.Disable();
             playerInput.Dispose();
-            playerController.PlayerUsedSkillEvent.RemoveListener(PlayerUseSkill);
             battleCanvas.enabled = false;
             stateDrivenCamera.m_AnimatedTarget.SetBool(inBattle, false);
         }
@@ -546,6 +568,7 @@ namespace Player.PlayerStates
         {
             // Increment the turn index, wrapping back to the start if it reaches the end of the list
             currentTurnIndex = (currentTurnIndex + 1) % turnOrder.Count;
+            selectedTargets.Clear();
         }
 
         private void OnCharacterRevived(string uuid)

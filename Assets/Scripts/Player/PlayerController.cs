@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using BattleSystem.ScriptableObjects.Characters;
 using BattleSystem.ScriptableObjects.Skills;
+using BeatDetection.DataStructures;
+using BeatDetection.QTE;
 using Player.Inventory;
 using Player.PlayerStates;
 using UnityEngine;
@@ -14,7 +17,7 @@ namespace Player
     [RequireComponent(typeof(Animator))]
     public class PlayerController : MonoBehaviour
     {
-        private StateMachine<IState> stateMachine;
+        public StateMachine<IState> stateMachine { get; private set; }
         private PlayerInput playerInput;
 
         public Character playerCharacter;
@@ -22,12 +25,14 @@ namespace Player
         public List<Character> party;
         public List<Character> enemies;
 
-        public UnityEvent<BaseSkill> SelectSkillEvent = new();
-        public UnityEvent PlayerUsedSkillEvent = new();
-
-        public void UseSelectedSkill()
+        public SimpleQTE simpleQTE;
+        
+        public UnityEvent<BaseSkill> SelectSkillEvent{ get; private set; } = new();
+        public UnityEvent<BeatResult> PlayerUsedSkillEvent { get; private set; } = new();
+        
+        public void UseSelectedSkill(BeatResult result)
         {
-            PlayerUsedSkillEvent?.Invoke();
+            PlayerUsedSkillEvent?.Invoke(result);
         }
 
         public void SelectSkill(BaseSkill skill)

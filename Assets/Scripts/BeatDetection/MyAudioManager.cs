@@ -42,17 +42,6 @@ namespace BeatDetection
             playMusic(defaultMusicPath);
         }
 
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.Return))
-            {
-                if (!currentMusicEvent.IsPlaying())
-                    currentMusicEvent.start();
-                else
-                    currentMusicEvent.stop();
-            }
-        }
-
         public void playMusic(string musicEventPath)
         {
             stopMusic();
