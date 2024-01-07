@@ -54,8 +54,8 @@ public class BaseSkillEditor : Editor
                 break;
 
             case SkillType.ReplenishSP:
-                // Display fields for ReplenishSP
-                // Assuming ReplenishSP has a field named spAmount
+                // Display fields for ChangeSP
+                // Assuming ChangeSP has a field named spAmount
                 EditorGUILayout.LabelField("SP Amount", EditorStyles.boldLabel);
                 skill.spAmount = EditorGUILayout.IntField(skill.spAmount);
                 break;

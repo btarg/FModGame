@@ -277,7 +277,7 @@ namespace Player.PlayerStates
             playerInput.UI.Select.started += StartScrolling;
             playerInput.UI.Select.canceled += StopScrolling;
             playerInput.UI.Submit.performed += TargetSelected;
-            playerInput.UI.Cancel.performed += GoBack;
+            playerInput.UI.Cancel.performed += _ => GoBack();
 
         }
 
@@ -304,7 +304,7 @@ namespace Player.PlayerStates
             NextTurn();
         }
 
-        private void GoBack(InputAction.CallbackContext obj)
+        private void GoBack()
         {
             if (isPlayerTurn && playerTurnState == PlayerBattleState.Targeting && isWaitingForPlayerInput)
             {
@@ -378,7 +378,22 @@ namespace Player.PlayerStates
         {
             if (isPlayerTurn && playerTurnState == PlayerBattleState.Targeting && isWaitingForPlayerInput)
             {
-                // TODO: spawn the correct QTE for the selected skill
+                if (selectedSkill.costsHP)
+                {
+                    if (playerCharacter.Character.HealthManager.CurrentHP <= selectedSkill.cost)
+                    {
+                        Debug.Log("Not enough HP!");
+                        GoBack();
+                        return;
+                    }
+                }
+                else if (playerCharacter.Character.HealthManager.CurrentSP <= selectedSkill.cost)
+                {
+                    Debug.Log("Not enough SP!");
+                    GoBack();
+                    return;
+                }
+                
                 playerTurnState = PlayerBattleState.Attacking;
                 void UseSkillAction() => playerController.simpleQTE.StartQTE(4, (result) =>
                 {

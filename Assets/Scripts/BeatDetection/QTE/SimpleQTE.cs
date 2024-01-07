@@ -30,6 +30,7 @@ namespace BeatDetection.QTE
             sequence = DOTween.Sequence();
         }
         
+        
         private void OnQTEButtonPressed(InputAction.CallbackContext ctx)
         {
             if (outerCircle.activeSelf && innerCircle.activeSelf)
@@ -57,7 +58,7 @@ namespace BeatDetection.QTE
             var beatWindowLogic = MyAudioManager.Instance.beatWindowLogic;
             
             // TODO: improve the accuracy
-            var targetScale = inputWindow;
+            var targetScale = innerCircle.transform.localScale.x * 0.9f;
             
             outerCircle.SetActive(true);
             innerCircle.SetActive(true);

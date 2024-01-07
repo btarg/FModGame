@@ -89,54 +89,50 @@ namespace BattleSystem.ScriptableObjects.Characters
         {
             if (!isAlive) return;
 
-            // Calculate evasion
+            // Calculate evasion (if the attack is not Almighty)
             float evasionChance = CurrentEVD;
-            if (UnityEngine.Random.value < evasionChance)
+            if (UnityEngine.Random.value < evasionChance && elementType != ElementType.Almighty)
             {
                 // The attack is evaded, return
                 OnDamageEvaded?.Invoke();
                 return;
             }
-
-            // Calculate defense
-            float defenseMultiplier = CurrentDEF;
-            damage = Mathf.CeilToInt(damage * (1 - defenseMultiplier));
-
-            if (Array.IndexOf(stats.Strengths, elementType) >= 0)
+            
+            if (elementType != ElementType.Almighty)
             {
-                foreach (var strength in stats.Strengths)
+                // Calculate defense
+                damage = Mathf.CeilToInt(damage * (1 - CurrentDEF));
+                
+                if (Array.IndexOf(stats.Strengths, elementType) >= 0)
                 {
-                    switch (strength.StrengthType)
+                    foreach (var strength in stats.Strengths)
                     {
-                        case StrengthType.Nullify:
-                            return;
-                        case StrengthType.Reflect:
-                            attacker.TakeDamage(this, damage, elementType);
-                            return;
-                        case StrengthType.Resist:
-                            damage = damage * (100 - strength.ResistPercentage) / 100;
-                            break;
+                        switch (strength.StrengthType)
+                        {
+                            case StrengthType.Nullify:
+                                return;
+                            case StrengthType.Reflect:
+                                attacker.TakeDamage(this, damage, elementType);
+                                return;
+                            case StrengthType.Resist:
+                                damage = damage * (100 - strength.ResistPercentage) / 100;
+                                break;
+                        }
+                        OnStrengthEncountered?.Invoke(strength.ElementType, strength.StrengthType);
                     }
-                    OnStrengthEncountered?.Invoke(strength.ElementType, strength.StrengthType);
+                }
+                if (Array.IndexOf(stats.Weaknesses, elementType) >= 0)
+                {
+                    // Critical hit!
+                    OnWeaknessEncountered?.Invoke(elementType);
+                    damage *= critDamageMultiplier;
                 }
             }
-
-            if (Array.IndexOf(stats.Weaknesses, elementType) >= 0)
-            {
-                // Critical hit!
-                OnWeaknessEncountered?.Invoke(elementType);
-                damage *= critDamageMultiplier;
-            }
-
+            
             CurrentHP = Mathf.Max(CurrentHP - damage, 0);
-
             OnDamage?.Invoke(this, damage);
-
-            // If the character's health reaches 0, invoke the death event
-            if (CurrentHP == 0)
-            {
-                Die();
-            }
+            
+            if (CurrentHP == 0) Die();
         }
 
         public void Revive(UUIDCharacterInstance character, int amount)
@@ -151,9 +147,10 @@ namespace BattleSystem.ScriptableObjects.Characters
             CurrentHP = Mathf.Min(CurrentHP + amount, MaxHP);
         }
 
-        public void ReplenishSP(int amount)
+        public void ChangeSP(int amount)
         {
-            CurrentSP = Mathf.Min(CurrentSP + amount, MaxSP);
+            CurrentSP = Mathf.Max(Mathf.Min(CurrentSP + amount, MaxSP), 0);
+            
         }
         public void RemoveAllStatModifiers()
         {

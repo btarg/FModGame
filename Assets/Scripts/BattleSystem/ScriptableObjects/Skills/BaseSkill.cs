@@ -19,6 +19,7 @@ namespace BattleSystem.ScriptableObjects.Skills
         public ElementType elementType; // for offensive skills
         public BuffDebuff buffDebuff; // for buff/debuff skills
         public int cost;
+        public bool costsHP;
         public int healAmount; // for heal skills
         public int spAmount; // for replenish SP skills
         public int reviveAmount; // for revive skills
@@ -55,7 +56,7 @@ namespace BattleSystem.ScriptableObjects.Skills
                     break;
                 case SkillType.ReplenishSP:
                     // Use the skill to replenish SP
-                    target.HealthManager.ReplenishSP(spAmount);
+                    target.HealthManager.ChangeSP(spAmount);
                     break;
                 case SkillType.Revive:
                     // Use the skill to revive
@@ -65,6 +66,15 @@ namespace BattleSystem.ScriptableObjects.Skills
                     }
                     break;
             }
+            if (costsHP)
+            {
+                user.HealthManager.TakeDamage(user.HealthManager, cost, ElementType.Almighty);
+            }
+            else
+            {
+                user.HealthManager.ChangeSP(-cost);
+            }
+            
         }
     }
 }

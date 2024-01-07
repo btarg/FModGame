@@ -94,3 +94,6 @@ fmod_editor.log
 /Assets/FMODStudioCache.meta
 
 *.log
+
+# TextMesh Pro
+/Assets/TextMesh Pro/*
