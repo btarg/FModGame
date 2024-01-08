@@ -5,14 +5,12 @@ using System.Threading.Tasks;
 using BattleSystem;
 using BattleSystem.ScriptableObjects.Characters;
 using BattleSystem.ScriptableObjects.Skills;
-using BattleSystem.UI;
 using BeatDetection;
 using BeatDetection.DataStructures;
 using Cinemachine;
-using TMPro;
+using Player.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace Player.PlayerStates
@@ -62,6 +60,8 @@ namespace Player.PlayerStates
         
         private BaseSkill selectedSkill;
         private Canvas battleCanvas;
+        private SkillListUI skillList;
+
         public BattleState(PlayerController _playerController, List<Character> _party, List<Character> _enemies, bool _ambush = false, int _arena = 1)
         {
             currentArena = _arena;
@@ -92,17 +92,9 @@ namespace Player.PlayerStates
         
             // Set up UI buttons with skills
             // TODO: move this to a proper UI canvas separate of the player
-            var buttons = battleCanvas.GetComponentsInChildren<Button>();
-            var texts = battleCanvas.GetComponentsInChildren<TextMeshProUGUI>();
-            for (int i = 0; i < buttons.Length; i++)
-            {
-                var button = buttons[i];
-                var text = texts[i];
-                var skill = playerCharacter.Character.AvailableSkills[i];
-                button.onClick.AddListener(() => playerController.SelectSkill(skill));
-                text.text = skill.name;
-            }
-        
+            skillList = battleCanvas.GetComponentInChildren<SkillListUI>();
+            skillList.PopulateList(playerCharacter);
+
         }
 
         private void SetupEventListeners()
@@ -312,11 +304,13 @@ namespace Player.PlayerStates
                 UpdateHealthUIs();
                 selectedSkill = null;
                 playerTurnState = PlayerBattleState.SelectingSkill;
+                skillList.Show();
             }
         }
 
         private void SelectSkill(BaseSkill skill)
         {
+            skillList.Hide();
             if (playerTurnState == PlayerBattleState.SelectingSkill)
             {
                 selectedSkill = skill;
@@ -514,6 +508,7 @@ namespace Player.PlayerStates
                     isWaitingForPlayerInput = true;
                     playerTurnState = PlayerBattleState.SelectingSkill;
                     UpdateHealthUIs();
+                    skillList.Show();
                 }
 
                 if (playerTurnState == PlayerBattleState.Targeting)
