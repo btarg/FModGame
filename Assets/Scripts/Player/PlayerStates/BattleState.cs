@@ -15,12 +15,22 @@ using Object = UnityEngine.Object;
 
 namespace Player.PlayerStates
 {
+    // Select Action -> Select Skill -> Select Target -> Attack
     public enum PlayerBattleState
     {
         Waiting,
-        Targeting,
+        SelectingAction,
         SelectingSkill,
+        Targeting,
         Attacking
+    }
+    
+    public enum BattleActionType
+    {
+        Attack,
+        Skill,
+        Item,
+        Defend
     }
 
     public class BattleState : IState
@@ -33,7 +43,7 @@ namespace Player.PlayerStates
         private bool isPlayerTurn;
 
         private PlayerInput playerInput;
-        private bool isWaitingForPlayerInput;
+        private bool playerStartedTurn;
         CinemachineStateDrivenCamera stateDrivenCamera;
 
         PlayerController playerController;
@@ -61,8 +71,9 @@ namespace Player.PlayerStates
         private BaseSkill selectedSkill;
         private Canvas battleCanvas;
         private SkillListUI skillList;
+        private static readonly int onHitAnimation = Animator.StringToHash("Hit");
 
-        public BattleState(PlayerController _playerController, List<Character> _party, List<Character> _enemies, bool _ambush = false, int _arena = 1)
+        public BattleState(PlayerController _playerController, List<Character> _party, List<Character> _enemies, bool isAmbush = false, int _arena = 1)
         {
             currentArena = _arena;
             playerController = _playerController;
@@ -79,7 +90,7 @@ namespace Player.PlayerStates
 
             // If it's an ambush, the player's party goes first
             // Otherwise, the enemies go first
-            currentTurnIndex = _ambush ? 0 : _party.Count;
+            currentTurnIndex = isAmbush ? 0 : _party.Count;
 
             SetupEventListeners();
 
@@ -91,9 +102,9 @@ namespace Player.PlayerStates
             battleCanvas.enabled = true;
         
             // Set up UI buttons with skills
-            // TODO: move this to a proper UI canvas separate of the player
             skillList = battleCanvas.GetComponentInChildren<SkillListUI>();
             skillList.PopulateList(playerCharacter);
+            skillList.Hide();
 
         }
 
@@ -109,6 +120,12 @@ namespace Player.PlayerStates
                 {
                     Debug.Log($"{uUIDCharacter.Character.DisplayName} took {damage} damage. ({healthManager.CurrentHP} HP left)");
                     UpdateHealthUIs();
+                    
+                    // animate damage
+                    GameObject characterGameObject = characterGameObjects.FirstOrDefault(x => x.Key == uUIDCharacter).Value;
+                    if (characterGameObject == null) return;
+                    Animator animator = characterGameObject.GetComponentInChildren<Animator>();
+                    if (animator != null) animator.SetTrigger(onHitAnimation);
                 });
                 uUIDCharacter.Character.HealthManager.OnDamageEvaded.AddListener(() =>
                 {
@@ -236,7 +253,7 @@ namespace Player.PlayerStates
             SwitchCameraState(currentArena);
             SpawnCharacters(currentArena - 1);
 
-            isWaitingForPlayerInput = false;
+            playerStartedTurn = false;
             AffinityLog.Load();
 
             // TODO: entered the battle state, play animations and music
@@ -260,7 +277,7 @@ namespace Player.PlayerStates
             Debug.Log("Turn order: " + turnOrderString);
 
             playerInput = new PlayerInput();
-            playerInput.Debug.Enable();
+            playerInput.Battle.Enable();
             playerInput.UI.Enable();
 
             selectedTargets = new List<GameObject> { characterGameObjects.Values.FirstOrDefault() };
@@ -271,6 +288,10 @@ namespace Player.PlayerStates
             playerInput.UI.Submit.performed += TargetSelected;
             playerInput.UI.Cancel.performed += _ => GoBack();
 
+            playerInput.Battle.Attack.performed += _ => SelectAction(BattleActionType.Attack);
+            playerInput.Battle.Skill.performed += _ => SelectAction(BattleActionType.Skill);
+            playerInput.Battle.Item.performed += _ => SelectAction(BattleActionType.Item);
+            playerInput.Battle.Guard.performed += _ => SelectAction(BattleActionType.Defend);
         }
 
         private void PlayerUseSkill(BeatResult result = BeatResult.Good)
@@ -289,7 +310,7 @@ namespace Player.PlayerStates
             }
             playerController.UseSelectedSkill(result);
 
-            isWaitingForPlayerInput = false;
+            playerStartedTurn = false;
             playerTurnState = PlayerBattleState.Waiting;
             selectedTargets.Clear();
             UpdateHealthUIs();
@@ -298,56 +319,103 @@ namespace Player.PlayerStates
 
         private void GoBack()
         {
-            if (isPlayerTurn && playerTurnState == PlayerBattleState.Targeting && isWaitingForPlayerInput)
+            if (isPlayerTurn && playerTurnState == PlayerBattleState.Targeting && playerStartedTurn)
             {
                 selectedTargets.Clear();
                 UpdateHealthUIs();
-                selectedSkill = null;
-                playerTurnState = PlayerBattleState.SelectingSkill;
-                skillList.Show();
-            }
-        }
 
-        private void SelectSkill(BaseSkill skill)
-        {
-            skillList.Hide();
-            if (playerTurnState == PlayerBattleState.SelectingSkill)
-            {
-                selectedSkill = skill;
-                selectedTargets.Clear();
-                if (selectedSkill.TargetsAll)
+                if (selectedSkill == playerCharacter.Character.attackSkill)
                 {
-                    var targetList = new List<GameObject>();
-                    if (selectedSkill.CanTargetEnemies)
-                    {
-                        // add all enemies to list of targets
-                        targetList.AddRange(characterGameObjects.Where(c => !c.Key.Character.IsPlayerCharacter).Select(c => c.Value));
-                    }
-                    if (selectedSkill.CanTargetAllies)
-                    {
-                        // add all allies to list of targets
-                        targetList.AddRange(characterGameObjects.Where(c => c.Key.Character.IsPlayerCharacter).Select(c => c.Value));
-                    }
-
-                    selectedTargets.AddRange(targetList);
-                }
-            
-                // set selected target to the first enemy in the list if the current selected skill targets enemies
-                else if (selectedSkill.CanTargetEnemies)
-                {
-                    selectedTargets.Insert(0, characterGameObjects.FirstOrDefault(c => !c.Key.Character.IsPlayerCharacter).Value);
+                    // go back to selecting action if we are selecting the attack skill
+                    playerTurnState = PlayerBattleState.SelectingAction;
                 }
                 else
                 {
-                    // otherwise set it to the player character
-                    selectedTargets.Insert(0, characterGameObjects[playerCharacter]);
+                    playerTurnState = PlayerBattleState.SelectingSkill;
+                    skillList.PopulateList(playerCharacter);
+                    skillList.Show();
+                }
+                selectedSkill = null;
+                
+            } else if (isPlayerTurn && playerTurnState == PlayerBattleState.SelectingSkill && playerStartedTurn)
+            {
+                playerTurnState = PlayerBattleState.SelectingAction;
+                skillList.Hide();
+            }
+        }
+
+        private void SelectAction(BattleActionType actionType)
+        {
+            if (playerTurnState != PlayerBattleState.SelectingAction) return;
+            
+            if (actionType == BattleActionType.Attack)
+            {
+                SelectSkill(playerCharacter.Character.attackSkill);
+                UpdateHealthUIs();
+                playerTurnState = PlayerBattleState.Targeting;
+            }
+            else if (actionType == BattleActionType.Skill)
+            {
+                UpdateHealthUIs();
+                skillList.PopulateList(playerCharacter);
+                skillList.Show();
+                playerTurnState = PlayerBattleState.SelectingSkill;
+            }
+            else if (actionType == BattleActionType.Item)
+            {
+                // TODO: implement items
+                Debug.LogWarning("Unimplemented!");
+            } else if (actionType == BattleActionType.Defend)
+            {
+                playerCharacter.Character.HealthManager.StartGuarding(1);
+                playerTurnState = PlayerBattleState.Waiting;
+                NextTurn();
+            }
+
+        }
+        
+        private void SelectSkill(BaseSkill skill)
+        {
+            if (skill == null)
+            {
+                Debug.LogError("Skill is null");
+                return;
+            }
+            
+            skillList.Hide();
+            selectedSkill = skill;
+            selectedTargets.Clear();
+            
+            if (selectedSkill.TargetsAll)
+            {
+                var targetList = new List<GameObject>();
+                if (selectedSkill.CanTargetEnemies)
+                {
+                    // add all enemies to list of targets
+                    targetList.AddRange(characterGameObjects.Where(c => !c.Key.Character.IsPlayerCharacter).Select(c => c.Value));
+                }
+                if (selectedSkill.CanTargetAllies)
+                {
+                    // add all allies to list of targets
+                    targetList.AddRange(characterGameObjects.Where(c => c.Key.Character.IsPlayerCharacter).Select(c => c.Value));
                 }
 
-                UpdateHealthUIs();
-                
-                playerTurnState = PlayerBattleState.Targeting;
-            
+                selectedTargets.AddRange(targetList);
             }
+            
+            // set selected target to the first enemy in the list if the current selected skill targets enemies
+            else if (selectedSkill.CanTargetEnemies)
+            {
+                selectedTargets.Insert(0, characterGameObjects.FirstOrDefault(c => !c.Key.Character.IsPlayerCharacter).Value);
+            }
+            else
+            {
+                // otherwise set it to the player character
+                selectedTargets.Insert(0, characterGameObjects[playerCharacter]);
+            }
+
+            UpdateHealthUIs();
+            playerTurnState = PlayerBattleState.Targeting;
         }
 
         private void UpdateHealthUIs()
@@ -370,18 +438,18 @@ namespace Player.PlayerStates
 
         private void TargetSelected(InputAction.CallbackContext ctx)
         {
-            if (isPlayerTurn && playerTurnState == PlayerBattleState.Targeting && isWaitingForPlayerInput)
+            if (isPlayerTurn && playerTurnState == PlayerBattleState.Targeting && playerStartedTurn)
             {
                 if (selectedSkill.costsHP)
                 {
-                    if (playerCharacter.Character.HealthManager.CurrentHP <= selectedSkill.cost)
+                    if (playerCharacter.Character.HealthManager.CurrentHP < selectedSkill.cost)
                     {
                         Debug.Log("Not enough HP!");
                         GoBack();
                         return;
                     }
                 }
-                else if (playerCharacter.Character.HealthManager.CurrentSP <= selectedSkill.cost)
+                else if (playerCharacter.Character.HealthManager.CurrentSP < selectedSkill.cost)
                 {
                     Debug.Log("Not enough SP!");
                     GoBack();
@@ -389,25 +457,22 @@ namespace Player.PlayerStates
                 }
                 
                 playerTurnState = PlayerBattleState.Attacking;
-                void UseSkillAction() => playerController.simpleQTE.StartQTE(4, (result) =>
-                {
-                    PlayerUseSkill(result);
-                });
+                void UseSkillAction() => playerController.simpleQTE.StartQTE(4, PlayerUseSkill);
                 MyAudioManager.Instance.beatScheduler.RunOnNextBeat(UseSkillAction);
             }
         }
 
         private void StartScrolling(InputAction.CallbackContext ctx)
         {
-            if (playerTurnState != PlayerBattleState.Targeting || !isWaitingForPlayerInput || characterGameObjects.Count < 1 || isScrolling || selectedSkill.TargetsAll)
+            if (playerTurnState != PlayerBattleState.Targeting || !playerStartedTurn || characterGameObjects.Count < 1 || isScrolling || selectedSkill.TargetsAll)
                 return;
         
             isScrolling = true;
             Vector2 direction = ctx.ReadValue<Vector2>();
     
-            if (direction.magnitude > 0f)
+            if (direction.magnitude > 0.5f)
             {
-                if (Math.Abs(direction.x - direction.y) > 0f)
+                if (Math.Abs(direction.x - direction.y) > 0.5f)
                 {
                     if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
                     {
@@ -482,6 +547,8 @@ namespace Player.PlayerStates
 
         public void Tick()
         {
+            Debug.Log(playerTurnState);
+            
             // If there are no more player characters, it's a defeat
             if (!turnOrder.Exists(c => c.Character.IsPlayerCharacter))
             {
@@ -501,43 +568,35 @@ namespace Player.PlayerStates
             isPlayerTurn = currentPlayerCharacter.IsPlayerCharacter;
             if (isPlayerTurn)
             {
-                if (!isWaitingForPlayerInput)
+                if (!playerStartedTurn)
                 {
                     // Player has entered their turn
                     Debug.Log("It's the player's turn!");
-                    isWaitingForPlayerInput = true;
-                    playerTurnState = PlayerBattleState.SelectingSkill;
-                    UpdateHealthUIs();
-                    skillList.Show();
+                    playerStartedTurn = true;
+                    playerTurnState = PlayerBattleState.SelectingAction;
+                    currentPlayerCharacter.HealthManager.OnTurnStart();
                 }
 
+                // TODO: this is incredibly fucking stupid
+                // disable or enable the submit button depending on state to prevent selecting a skill immediately attacking
                 if (playerTurnState == PlayerBattleState.Targeting)
                 {
-                    if (selectedTargets != null)
-                    {
-                        foreach (var target in selectedTargets)
-                        {
-                            Debug.DrawLine(Camera.main.transform.position, target.transform.position, Color.red);
-                        }
-                    
-                    }
-
-                    if (battleCanvas != null)
-                        battleCanvas.enabled = false;
+                    playerInput.UI.Submit.Enable();
+                    playerInput.UI.Select.Enable();
                 }
-                else if (playerTurnState == PlayerBattleState.SelectingSkill)
+                else
                 {
-                    // TODO: logic for selecting a skill
-                    if (battleCanvas != null)
-                        battleCanvas.enabled = true;
+                    playerInput.UI.Submit.Disable();
+                    playerInput.UI.Select.Disable();
                 }
-
             }
             else
             {
                 // TODO: Handle enemy's turn
                 Debug.Log("It's the enemy's turn!");
                 // TODO: wait for enemy AI input
+                currentPlayerCharacter.HealthManager.OnTurnStart();
+                // for now we move to next turn straight away
                 NextTurn();
             }
         }
@@ -578,6 +637,7 @@ namespace Player.PlayerStates
         {
             // Increment the turn index, wrapping back to the start if it reaches the end of the list
             currentTurnIndex = (currentTurnIndex + 1) % turnOrder.Count;
+            playerStartedTurn = false;
             selectedTargets.Clear();
         }
 

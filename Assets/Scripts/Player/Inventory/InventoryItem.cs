@@ -8,7 +8,8 @@ namespace Player.Inventory
     public enum ItemType {
         Weapon,
         Wearable,
-        Consumable,
+        ConsumableSkill,
+        ConsumableBuffDebuff,
         QuestItem,
         KeyItem
     }
@@ -18,7 +19,7 @@ namespace Player.Inventory
         public string displayName;
         public string description;
         public ItemType itemType;
-        public BuffDebuff modifierOnEquip;
+        public BuffDebuff buffDebuff;
         // if it's a weapon, it will have a Skill associated with it
         public BaseSkill skill;
         public int value;

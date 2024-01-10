@@ -6,6 +6,7 @@ using BattleSystem.ScriptableObjects.Stats.Modifiers;
 using BattleSystem.DataTypes;
 using BattleSystem.ScriptableObjects.Stats.CharacterStats;
 using System.Collections.Generic;
+using BattleSystem.ScriptableObjects.Stats;
 
 namespace BattleSystem.ScriptableObjects.Characters
 {
@@ -32,7 +33,15 @@ namespace BattleSystem.ScriptableObjects.Characters
 
         private CharacterStats stats;
         private string UUID;
-        private List<BuffDebuff> activeBuffDebuffs = new List<BuffDebuff>();
+        private List<BuffDebuff> activeBuffDebuffs = new();
+        public bool isGuarding { get; private set; }
+
+        public int guardingTurnsLeft { get; private set; }
+        public void StartGuarding(int turns)
+        {
+            isGuarding = true;
+            guardingTurnsLeft = turns;
+        }
 
         public void InitStats(CharacterStats _stats, string _UUID)
         {
@@ -82,6 +91,26 @@ namespace BattleSystem.ScriptableObjects.Characters
         public int MaxHP;
         public int MaxSP;
 
+        public void OnTurnStart()
+        {
+            if (guardingTurnsLeft > 0)
+            {
+                guardingTurnsLeft--;
+                if (guardingTurnsLeft == 0)
+                {
+                    isGuarding = false;
+                }
+            }
+            
+            // get the duration of every buff/debuff and decrement it
+            foreach (var buffDebuff in activeBuffDebuffs)
+            {
+                buffDebuff.Duration--;
+            }
+            // remove expired
+            activeBuffDebuffs.RemoveAll(bd => bd.Duration <= 0);
+        }
+        
         public void TakeDamage(HealthManager attacker, int damage, ElementType elementType)
         {
             if (!isAlive) return;
@@ -98,15 +127,19 @@ namespace BattleSystem.ScriptableObjects.Characters
             if (elementType != ElementType.Almighty)
             {
                 // Calculate defense if not a weakness
-                if (stats.Weaknesses.Contains(elementType))
+                if (!stats.Weaknesses.Contains(elementType))
                 {
                     damage = Mathf.CeilToInt(damage * (1 - CurrentDEF));
+                }
+                if (isGuarding)
+                {
+                    damage -= Mathf.RoundToInt(damage * 0.4f);
                 }
                 
                 // Check for strengths
                 if (Array.IndexOf(stats.Strengths, elementType) >= 0)
                 {
-                    foreach (var strength in stats.Strengths)
+                    foreach (ElementStrength strength in stats.Strengths)
                     {
                         switch (strength.StrengthType)
                         {
@@ -122,7 +155,7 @@ namespace BattleSystem.ScriptableObjects.Characters
                         OnStrengthEncountered?.Invoke(strength.ElementType, strength.StrengthType);
                     }
                 }
-                if (Array.IndexOf(stats.Weaknesses, elementType) >= 0)
+                if (stats.Weaknesses.Contains(elementType) && !isGuarding)
                 {
                     // Critical hit!
                     OnWeaknessEncountered?.Invoke(elementType);

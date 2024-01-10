@@ -11,7 +11,7 @@ namespace Player.UI
         private TemplateContainer listElementTemplateInstance;
         
         private PlayerController playerController;
-        private UUIDCharacterInstance currentPlayerCharacter;
+        private bool isShowing = false;
         
         // Start is called before the first frame update
         void Start()
@@ -24,7 +24,6 @@ namespace Player.UI
         public void PopulateList(UUIDCharacterInstance playerCharacter)
         {
             listDocument.rootVisualElement.Clear();
-            currentPlayerCharacter = playerCharacter;
 
             foreach (var skill in playerCharacter.Character.AvailableSkills)
             {
@@ -37,7 +36,11 @@ namespace Player.UI
                 skillButton.SetEnabled((skill.costsHP && playerCharacter.Character.HealthManager.CurrentHP >= skill.cost) ||
                                        (!skill.costsHP && playerCharacter.Character.HealthManager.CurrentSP >= skill.cost));
                 skillButton.text = $"{skill.skillName} ({skill.cost} {costType})";
-                skillButton.clicked += () => playerController.SelectSkill(skill);
+                skillButton.clicked += () =>
+                {
+                    if (isShowing)
+                        playerController.SelectSkill(skill);
+                };
             }
         }
 
@@ -45,14 +48,15 @@ namespace Player.UI
         public void Hide()
         {
             listDocument.rootVisualElement.style.display = DisplayStyle.None;
+            isShowing = false;
         }
         public void Show()
         {
             listDocument.rootVisualElement.style.display = DisplayStyle.Flex;
             // focus the first button
             var firstButton = listDocument.rootVisualElement.Q<Button>();
-            PopulateList(currentPlayerCharacter);
             firstButton.Focus();
+            isShowing = true;
         }
     }
 

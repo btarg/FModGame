@@ -12,6 +12,7 @@ namespace BattleSystem.ScriptableObjects.Characters
         public String DisplayName;
         public Color Color;
         public CharacterStats Stats;
+        // TODO: use a weapon item equipped by the character instead of a skill. The weapon holds the skill
         public BaseSkill attackSkill;
         public List<BaseSkill> AvailableSkills;
         public HealthManager HealthManager;

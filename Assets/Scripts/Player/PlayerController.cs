@@ -28,6 +28,7 @@ namespace Player
         public SimpleQTE simpleQTE;
         
         public UnityEvent<BaseSkill> SelectSkillEvent{ get; private set; } = new();
+        public UnityEvent<BattleActionType> SelectActionEvent{ get; private set; } = new();
         public UnityEvent<BeatResult> PlayerUsedSkillEvent { get; private set; } = new();
         
         public void UseSelectedSkill(BeatResult result)
@@ -38,6 +39,11 @@ namespace Player
         public void SelectSkill(BaseSkill skill)
         {
             SelectSkillEvent?.Invoke(skill);
+        }
+        
+        public void SelectAction(BattleActionType action)
+        {
+            SelectActionEvent?.Invoke(action);
         }
 
         private void Awake()
