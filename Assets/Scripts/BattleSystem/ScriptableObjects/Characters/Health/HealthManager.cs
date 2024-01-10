@@ -65,25 +65,19 @@ namespace BattleSystem.ScriptableObjects.Characters
 
         public int CurrentHP
         {
-            get { return GetCurrentStat(StatType.HP); }
-            set { stats.HP = Mathf.Min(value, MaxHP); }
+            get => GetCurrentStat(StatType.HP);
+            private set => stats.HP = Mathf.Min(value, MaxHP);
         }
 
         public int CurrentSP
         {
-            get { return GetCurrentStat(StatType.SP); }
-            set { stats.SP = Mathf.Min(value, MaxSP); }
+            get => GetCurrentStat(StatType.SP);
+            private set => stats.SP = Mathf.Min(value, MaxSP);
         }
 
-        public float CurrentDEF
-        {
-            get { return GetCurrentStatFloat(StatType.DEF); }
-        }
+        public float CurrentDEF => GetCurrentStatFloat(StatType.DEF);
 
-        public float CurrentEVD
-        {
-            get { return GetCurrentStatFloat(StatType.EVD); }
-        }
+        public float CurrentEVD => GetCurrentStatFloat(StatType.EVD);
 
         public int MaxHP;
         public int MaxSP;
@@ -92,8 +86,8 @@ namespace BattleSystem.ScriptableObjects.Characters
         {
             if (!isAlive) return;
 
-            // Calculate evasion (if the attack is not Almighty)
-            float evasionChance = CurrentEVD;
+            // Calculate evasion (if the attack is not Almighty or a weakness)
+            float evasionChance = stats.Weaknesses.Contains(elementType) ? 0 : CurrentEVD;
             if (UnityEngine.Random.value < evasionChance && elementType != ElementType.Almighty)
             {
                 // The attack is evaded, return
@@ -103,9 +97,13 @@ namespace BattleSystem.ScriptableObjects.Characters
             
             if (elementType != ElementType.Almighty)
             {
-                // Calculate defense
-                damage = Mathf.CeilToInt(damage * (1 - CurrentDEF));
+                // Calculate defense if not a weakness
+                if (stats.Weaknesses.Contains(elementType))
+                {
+                    damage = Mathf.CeilToInt(damage * (1 - CurrentDEF));
+                }
                 
+                // Check for strengths
                 if (Array.IndexOf(stats.Strengths, elementType) >= 0)
                 {
                     foreach (var strength in stats.Strengths)
