@@ -1,10 +1,9 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
 using BattleSystem.ScriptableObjects.Characters;
 using BattleSystem.ScriptableObjects.Skills;
 using BeatDetection.DataStructures;
 using BeatDetection.QTE;
+using Cinemachine;
 using Player.Inventory;
 using Player.PlayerStates;
 using Player.SaveLoad;
@@ -13,7 +12,6 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
-using Util.DataTypes;
 
 namespace Player
 {
@@ -25,8 +23,9 @@ namespace Player
         private PlayerInput playerInput;
 
         public Character playerCharacter;
+        public CinemachineStateDrivenCamera stateDrivenCamera;
         public PlayerInventory playerInventory { get; private set; }
-        public List<InventoryItem> inventoryItems = new();
+        [FormerlySerializedAs("inventoryItems")] public List<InventoryItem> defaultInventoryItems = new();
         public List<Character> party;
         public List<Character> enemies;
 
@@ -56,22 +55,41 @@ namespace Player
         {
             playerInput = new PlayerInput();
             stateMachine = new StateMachine<IState>();
+            
             if (!party.Contains(playerCharacter))
             {
                 party.Add(playerCharacter);
             }
 
-            // default to ExplorationState
-            EnterExplorationState();
-
             // Register the callback for the BattleState input action
             playerInput.Debug.BattleState.performed += EnterBattleState;
             
             // load inventory from a file and add default items
-            playerInventory = SaveManager.Load().inventory;
+            playerInventory = new PlayerInventory(SaveManager.Load().inventoryItems);
+            if (playerInventory.inventoryItems.Count == 0)
+            {
+                playerInventory.LoadInventoryItems(defaultInventoryItems);
+            }
+            else
+            {
+                foreach (var item in playerInventory.inventoryItems)
+                {
+                    Debug.Log($"Loaded {item.Key.displayName} x {item.Value} from save file.");
+                }
+            }
+                
         }
 
-
+        private void Start()
+        {
+            // Get Cinemachine camera on start to avoid it being null
+            stateDrivenCamera = Camera.main.gameObject.GetComponent<CinemachineBrain>().ActiveVirtualCamera as CinemachineStateDrivenCamera;
+            Debug.Log("Main Cinemachine camera:" + stateDrivenCamera);
+            
+            // default to ExplorationState
+            EnterExplorationState();
+        }
+        
         public void EnterExplorationState()
         {
             if (stateMachine.GetCurrentState() is ExplorationState)

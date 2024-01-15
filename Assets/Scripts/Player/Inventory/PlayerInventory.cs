@@ -1,21 +1,22 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using BeatDetection.DataStructures;
-using Player.SaveLoad;
 using UnityEngine;
 using UnityEngine.Events;
-using Util;
 using Util.DataTypes;
 
 namespace Player.Inventory
 {
-    [Serializable]
     public class PlayerInventory
     {
-        public SerializableDictionary<InventoryItem, int> inventoryItems { get; private set; } = new();
+        public SerializableDictionary<InventoryItem, int> inventoryItems { get; private set; }
         private PlayerController lastPlayerController;
        
+        public PlayerInventory(SerializableDictionary<InventoryItem, int> items)
+        {
+            inventoryItems = items;
+        }
+        
         public void AddInventoryItem(InventoryItem item, int count)
         {
             // if already exists, add to the count, otherwise add a new entry
@@ -43,9 +44,15 @@ namespace Player.Inventory
                     lastPlayerController.SelectSkill(item.skill);
                     // when we use a skill, we need to remove it from the inventory
                     lastPlayerController.PlayerUsedSkillEvent.AddListener(_ => UseItemListener(item));
-
                     break;
-                
+            }
+        }
+        
+        public void LoadInventoryItems(List<InventoryItem> items)
+        {
+            foreach (var item in items)
+            {
+                AddInventoryItem(item, 1);
             }
         }
 

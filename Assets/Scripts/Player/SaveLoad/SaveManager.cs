@@ -1,3 +1,5 @@
+using System;
+using System.Globalization;
 using System.IO;
 using Player.Inventory;
 using UnityEngine;
@@ -7,38 +9,58 @@ namespace Player.SaveLoad
 {
     public static class SaveManager
     {
-        private static readonly string jsonPath = Path.Combine(Application.persistentDataPath, "Save.json");
         private static SaveObject saveObject;
         
-        // function to get a SaveObject from a json file
+        // when getting the jsonPath, we should determine the file name based on the save slot stored in player prefs
+        private static string jsonPath
+        {
+            get
+            {
+                int saveSlot = PlayerPrefs.GetInt("SaveSlot", 0);
+                return Path.Combine(Application.persistentDataPath, "Save" + saveSlot + ".json");
+            }
+        }
+
         public static SaveObject Load()
         {
             saveObject = new SaveObject();
             if (!File.Exists(jsonPath))
             {
                 File.Create(jsonPath).Dispose();
+                SaveToFile();
                 return saveObject;
             }
             string json = File.ReadAllText(jsonPath);
             saveObject = JsonUtility.FromJson<SaveObject>(json);
+
+            Debug.Log($"Loaded from {jsonPath} at {DateTime.FromFileTimeUtc(saveObject.timestamp).ToString(CultureInfo.CurrentCulture)}");
             return saveObject;
         }
-        public static bool SaveAffinityLog(AffinityLogDictionary log)
+        public static void SaveAffinityLog(AffinityLogDictionary log)
         {
             saveObject.affinityLogDictionary = log;
-            return SaveToFile();
         }
-        public static bool SaveInventory(PlayerInventory inventory)
+        public static void SaveInventory(PlayerInventory inventory)
         {
-            saveObject.inventory = inventory;
-            return SaveToFile();
+            saveObject.inventoryItems = inventory.inventoryItems;
         }
 
-        private static bool SaveToFile()
+        public static bool SaveToFile()
         {
-            string json = JsonUtility.ToJson(saveObject);
-            File.WriteAllText(jsonPath, json);
-            Debug.Log("Saved to " + jsonPath);
+            try
+            {
+                saveObject.timestamp = DateTime.Now.ToFileTimeUtc();
+                string json = JsonUtility.ToJson(saveObject);
+                File.WriteAllText(jsonPath, json);
+                Debug.Log("Saved to " + jsonPath);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("Failed to save to " + jsonPath);
+                Debug.LogWarning(e.Message);
+                return false;
+            }
+
             return true;
         }
     }

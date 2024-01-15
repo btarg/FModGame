@@ -8,6 +8,7 @@ namespace Player.SaveLoad
     public class SaveObject
     {
         public AffinityLogDictionary affinityLogDictionary = new();
-        public PlayerInventory inventory = new();
+        public SerializableDictionary<InventoryItem, int> inventoryItems = new();
+        public long timestamp = DateTime.Now.ToFileTimeUtc();
     }
 }

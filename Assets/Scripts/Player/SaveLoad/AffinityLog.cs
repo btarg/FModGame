@@ -21,13 +21,11 @@ namespace Player.SaveLoad
         public static void LogStrength(string characterName, ElementType strength, StrengthType type)
         {
             GetOrCreateData(characterName).strengths[strength] = type;
-            SaveManager.SaveAffinityLog(log);
         }
 
         public static void LogWeakness(string characterName, ElementType weakness)
         {
             GetOrCreateData(characterName).weaknesses.Add(weakness);
-            SaveManager.SaveAffinityLog(log);
         }
 
         public static Dictionary<ElementType, StrengthType> GetStrengthsEncountered(string characterName)
@@ -42,7 +40,16 @@ namespace Player.SaveLoad
 
         public static void Load()
         {
-            log = SaveManager.Load().affinityLogDictionary;
+            AffinityLogDictionary loaded = SaveManager.Load().affinityLogDictionary;
+            if (loaded != null)
+            {
+                log = loaded;
+            }
+        }
+
+        public static void Save()
+        {
+            SaveManager.SaveAffinityLog(log);
         }
     }
 }

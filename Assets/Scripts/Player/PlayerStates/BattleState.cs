@@ -46,7 +46,6 @@ namespace Player.PlayerStates
 
         private PlayerInput playerInput;
         private bool playerStartedTurn;
-        CinemachineStateDrivenCamera stateDrivenCamera;
 
         PlayerController playerController;
         UUIDCharacterInstance playerCharacter;
@@ -93,21 +92,8 @@ namespace Player.PlayerStates
             // If it's an ambush, the player's party goes first
             // Otherwise, the enemies go first
             currentTurnIndex = isAmbush ? 0 : _party.Count;
-
             SetupEventListeners();
-
-            stateDrivenCamera = Camera.main.gameObject.GetComponent<CinemachineBrain>().ActiveVirtualCamera as CinemachineStateDrivenCamera;
-            if (stateDrivenCamera != null) stateDrivenCamera.m_AnimatedTarget.SetBool(inBattle, true);
-        
-            // get canvas by tag and set it active
-            battleCanvas = GameObject.FindWithTag("BattleCanvas").GetComponent<Canvas>();
-            battleCanvas.enabled = true;
-        
-            // Set up UI buttons with skills
-            skillList = battleCanvas.GetComponentInChildren<SkillListUI>();
-            skillList.PopulateList(playerCharacter);
-            skillList.Hide();
-
+            
         }
 
         private void SetupEventListeners()
@@ -190,7 +176,7 @@ namespace Player.PlayerStates
         public void SwitchCameraState(int arenaCam)
         {
             // TODO: use hashes instead of strings
-            stateDrivenCamera.m_AnimatedTarget.SetInteger(cam, arenaCam);
+            playerController.stateDrivenCamera.m_AnimatedTarget.SetInteger(cam, arenaCam);
         }
 
         public void SpawnCharacters(int arena)
@@ -243,6 +229,19 @@ namespace Player.PlayerStates
 
         public void OnEnter()
         {
+            // get the state driven camera and set the inBattle parameter to true
+            playerController.stateDrivenCamera.m_AnimatedTarget.SetBool(inBattle, true);
+        
+            // get canvas by tag and set it active
+            battleCanvas = GameObject.FindWithTag("BattleCanvas").GetComponent<Canvas>();
+            battleCanvas.enabled = true;
+        
+            // Set up UI buttons with skills
+            skillList = battleCanvas.GetComponentInChildren<SkillListUI>();
+            skillList.PopulateList(playerCharacter);
+            skillList.Hide();
+            
+            
             // default to first state
             playerTurnState = PlayerBattleState.Waiting;
 
@@ -557,12 +556,11 @@ namespace Player.PlayerStates
 
         public void Tick()
         {
-            Debug.Log(playerTurnState);
-            
             // If there are no more player characters, it's a defeat
             if (!turnOrder.Exists(c => c.Character.IsPlayerCharacter))
             {
                 Debug.Log("Defeat!");
+                playerController.EnterExplorationState();
                 // TODO: switch to defeat state
                 return;
             }
@@ -570,7 +568,7 @@ namespace Player.PlayerStates
             else if (!turnOrder.Exists(c => !c.Character.IsPlayerCharacter))
             {
                 Debug.Log("Victory!");
-                // TODO: switch to victory state
+                playerController.EnterExplorationState();
                 return;
             }
 
@@ -613,6 +611,7 @@ namespace Player.PlayerStates
     
         public void OnExit()
         {
+            Debug.Log("Exiting battle");
             foreach (var characterInstance in allCharacters)
             {
                 var healthManager = characterInstance.Character.HealthManager;
@@ -640,7 +639,11 @@ namespace Player.PlayerStates
             playerInput.Disable();
             playerInput.Dispose();
             battleCanvas.enabled = false;
-            stateDrivenCamera.m_AnimatedTarget.SetBool(inBattle, false);
+            playerController.stateDrivenCamera.m_AnimatedTarget.SetBool(inBattle, false);
+            
+            SaveManager.SaveInventory(playerController.playerInventory);
+            AffinityLog.Save();
+            SaveManager.SaveToFile();
         }
 
         private void NextTurn()
