@@ -3,10 +3,10 @@ using UnityEngine.Events;
 using System;
 using System.Linq;
 using BattleSystem.ScriptableObjects.Stats.Modifiers;
-using BattleSystem.DataTypes;
 using BattleSystem.ScriptableObjects.Stats.CharacterStats;
 using System.Collections.Generic;
 using BattleSystem.ScriptableObjects.Stats;
+using Util.DataTypes;
 
 namespace BattleSystem.ScriptableObjects.Characters
 {

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ddf7b4db15c6e9429afdaa006e96336, type: 3}
   m_Name: MyFireEnemy
   m_EditorClassIdentifier: 
+  name: MyFireEnemyTest
   DisplayName: Fire Enemy
   Color: {r: 1, g: 0.5372549, b: 0, a: 0}
   Stats: {fileID: 11400000, guid: e4d992caa714a21479c2425149cb4cba, type: 2}

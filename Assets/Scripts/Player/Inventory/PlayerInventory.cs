@@ -1,17 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using BeatDetection.DataStructures;
+using Player.SaveLoad;
 using UnityEngine;
 using UnityEngine.Events;
+using Util;
+using Util.DataTypes;
 
 namespace Player.Inventory
 {
     [Serializable]
     public class PlayerInventory
     {
-        public Dictionary<InventoryItem, int> inventoryItems { get; private set; } = new();
+        public SerializableDictionary<InventoryItem, int> inventoryItems { get; private set; } = new();
         private PlayerController lastPlayerController;
-
+       
         public void AddInventoryItem(InventoryItem item, int count)
         {
             // if already exists, add to the count, otherwise add a new entry
@@ -53,22 +57,6 @@ namespace Player.Inventory
                 lastPlayerController.PlayerUsedSkillEvent.RemoveListener(_ => UseItemListener(item));
             }
             return null;
-        }
-        public void LoadInventoryItems(List<InventoryItem> items)
-        {
-            foreach (var item in items)
-            {
-                AddInventoryItem(item, 1);
-            }
-        }
-
-        public void LoadFromFile()
-        {
-            // TODO: get a json file in the persistent data path and load it
-        }
-
-        public void SaveToFile()
-        {
         }
     }
 }

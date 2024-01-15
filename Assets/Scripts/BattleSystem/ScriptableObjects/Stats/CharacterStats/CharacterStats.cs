@@ -1,5 +1,5 @@
 using UnityEngine;
-using BattleSystem.DataTypes;
+using Util.DataTypes;
 
 namespace BattleSystem.ScriptableObjects.Stats.CharacterStats
 {

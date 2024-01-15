@@ -1,7 +1,4 @@
-﻿using System;
-using BattleSystem.ScriptableObjects.Skills;
-using BattleSystem.ScriptableObjects.Stats.Modifiers;
-using UnityEditor;
+﻿using BattleSystem.ScriptableObjects.Skills;
 using UnityEngine;
 
 namespace Player.Inventory

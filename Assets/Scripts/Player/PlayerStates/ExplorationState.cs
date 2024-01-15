@@ -2,6 +2,7 @@ using UnityEngine;
 using Cinemachine;
 using DG.Tweening;
 using Player;
+using StateMachine;
 using UnityEngine.InputSystem;
 
 public class ExplorationState : IState

@@ -1,5 +1,8 @@
-namespace BattleSystem.DataTypes
+using System;
+
+namespace Util.DataTypes
 {
+    [Serializable]
     public enum StatType
     {
         HP,

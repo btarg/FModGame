@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-using BattleSystem.DataTypes;
+using Util.DataTypes;
 
 namespace BattleSystem.ScriptableObjects.Stats.Modifiers
 {

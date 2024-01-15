@@ -1,7 +1,7 @@
 using UnityEngine;
 using BattleSystem.ScriptableObjects.Characters;
 using BattleSystem.ScriptableObjects.Stats.Modifiers;
-using BattleSystem.DataTypes;
+using Util.DataTypes;
 
 namespace BattleSystem.ScriptableObjects.Skills
 {

@@ -1,6 +1,6 @@
 using System;
 
-namespace BattleSystem.DataTypes
+namespace Util.DataTypes
 {
     [Serializable]
     public enum StrengthType

@@ -1,27 +1,30 @@
-public class StateMachine<T> where T : IState
+namespace StateMachine
 {
-    private T currentState;
-
-    public void Tick()
+    public class StateMachine<T> where T : IState
     {
-        currentState?.Tick();
+        private T currentState;
+
+        public void Tick()
+        {
+            currentState?.Tick();
+        }
+
+        public void SetState(T state)
+        {
+            currentState?.OnExit();
+            currentState = state;
+            currentState.OnEnter();
+        }
+        public IState GetCurrentState()
+        {
+            return currentState;
+        }
     }
 
-    public void SetState(T state)
+    public interface IState
     {
-        currentState?.OnExit();
-        currentState = state;
-        currentState.OnEnter();
+        void OnEnter();
+        void Tick();
+        void OnExit();
     }
-    public IState GetCurrentState()
-    {
-        return currentState;
-    }
-}
-
-public interface IState
-{
-    void OnEnter();
-    void Tick();
-    void OnExit();
 }

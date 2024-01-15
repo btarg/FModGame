@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using BattleSystem.ScriptableObjects.Characters;
 using BattleSystem.ScriptableObjects.Skills;
 using BeatDetection.DataStructures;
 using BeatDetection.QTE;
 using Player.Inventory;
 using Player.PlayerStates;
+using Player.SaveLoad;
+using StateMachine;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
+using Util.DataTypes;
 
 namespace Player
 {
@@ -27,7 +31,8 @@ namespace Player
         public List<Character> enemies;
 
         public SimpleQTE simpleQTE;
-        
+        private string jsonFilePath;
+
         public UnityEvent<BaseSkill> SelectSkillEvent{ get; private set; } = new();
         public UnityEvent<BattleActionType> SelectActionEvent{ get; private set; } = new();
         public UnityEvent<BeatResult> PlayerUsedSkillEvent { get; private set; } = new();
@@ -62,10 +67,8 @@ namespace Player
             // Register the callback for the BattleState input action
             playerInput.Debug.BattleState.performed += EnterBattleState;
             
-            // TODO: load this from a file
-            playerInventory = new PlayerInventory();
-            // add default items
-            playerInventory.LoadInventoryItems(inventoryItems);
+            // load inventory from a file and add default items
+            playerInventory = SaveManager.Load().inventory;
         }
 
 
@@ -81,8 +84,7 @@ namespace Player
 
         private void Update()
         {
-            if (stateMachine != null)
-                stateMachine.Tick();
+            stateMachine.Tick();
         }
 
         private void EnterBattleState(InputAction.CallbackContext ctx)
@@ -106,6 +108,8 @@ namespace Player
         {
             if (playerInput != null)
                 playerInput.Disable();
+
+            SaveManager.SaveInventory(playerInventory);
         }
     }
 }

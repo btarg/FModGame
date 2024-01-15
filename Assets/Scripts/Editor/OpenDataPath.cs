@@ -1,14 +1,17 @@
 #if UNITY_EDITOR
-using UnityEditor;
 using System.Diagnostics;
+using UnityEditor;
 using UnityEngine;
 
-public class OpenDataPath
+namespace Editor
 {
-    [MenuItem("Tools/Open Data Path")]
-    private static void OpenDataPathInExplorer()
+    public static class OpenDataPath
     {
-        Process.Start(Application.persistentDataPath);
+        [MenuItem("Tools/Open Data Path")]
+        private static void OpenDataPathInExplorer()
+        {
+            Process.Start(Application.persistentDataPath);
+        }
     }
 }
 #endif
