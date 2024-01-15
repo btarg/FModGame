@@ -95,5 +95,6 @@ fmod_editor.log
 
 *.log
 
-# TextMesh Pro
+# Plugins and packages
 /Assets/TextMesh Pro/*
+/Assets/PlayerPrefsEditor/*
