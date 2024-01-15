@@ -15,7 +15,7 @@ namespace BattleSystem.ScriptableObjects.Characters
     {
         public bool isAlive = true;
 
-        public class OnDamagedEvent : UnityEvent<HealthManager, int> { }
+        public class OnDamagedEvent : UnityEvent<HealthManager, ElementType, int> { }
         public class OnStrengthEncounteredEvent : UnityEvent<ElementType, StrengthType> { }
         public class OnWeaknessEncounteredEvent : UnityEvent<ElementType> { }
         public class OnDamageEvadedEvent : UnityEvent { }
@@ -164,7 +164,7 @@ namespace BattleSystem.ScriptableObjects.Characters
             }
             
             CurrentHP = Mathf.Max(CurrentHP - damage, 0);
-            OnDamage?.Invoke(this, damage);
+            OnDamage?.Invoke(this, elementType, damage);
             
             if (CurrentHP == 0) Die();
         }

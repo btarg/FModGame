@@ -22,6 +22,7 @@ namespace Player
 
         public Character playerCharacter;
         public PlayerInventory playerInventory { get; private set; }
+        public List<InventoryItem> inventoryItems = new();
         public List<Character> party;
         public List<Character> enemies;
 
@@ -63,6 +64,8 @@ namespace Player
             
             // TODO: load this from a file
             playerInventory = new PlayerInventory();
+            // add default items
+            playerInventory.LoadInventoryItems(inventoryItems);
         }
 
 

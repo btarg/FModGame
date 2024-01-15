@@ -116,9 +116,9 @@ namespace Player.PlayerStates
             {
                 uUIDCharacter.Character.HealthManager.OnRevive.AddListener(OnCharacterRevived);
                 uUIDCharacter.Character.HealthManager.OnDeath.AddListener(OnCharacterDeath);
-                uUIDCharacter.Character.HealthManager.OnDamage.AddListener((healthManager, damage) =>
+                uUIDCharacter.Character.HealthManager.OnDamage.AddListener((healthManager, elementType, damage) =>
                 {
-                    Debug.Log($"{uUIDCharacter.Character.DisplayName} took {damage} damage. ({healthManager.CurrentHP} HP left)");
+                    Debug.Log($"{uUIDCharacter.Character.DisplayName} took {damage} {elementType} damage. ({healthManager.CurrentHP} HP left)");
                     UpdateHealthUIs();
                     
                     // animate damage
@@ -347,12 +347,10 @@ namespace Player.PlayerStates
         private void SelectAction(BattleActionType actionType)
         {
             if (playerTurnState != PlayerBattleState.SelectingAction) return;
-            
+
             if (actionType == BattleActionType.Attack)
             {
                 SelectSkill(playerCharacter.Character.attackSkill);
-                UpdateHealthUIs();
-                playerTurnState = PlayerBattleState.Targeting;
             }
             else if (actionType == BattleActionType.Skill)
             {
@@ -364,14 +362,24 @@ namespace Player.PlayerStates
             else if (actionType == BattleActionType.Item)
             {
                 // TODO: implement items
-                Debug.LogWarning("Unimplemented!");
-            } else if (actionType == BattleActionType.Defend)
+                // get the first item in the inventory and use it
+                var inventoryItems = playerController.playerInventory.inventoryItems;
+                if (inventoryItems.Count > 0)
+                {
+                    var item = inventoryItems.First();
+                    playerController.playerInventory.UseItem(playerController, playerCharacter, item.Key);
+                }
+                else
+                {
+                    Debug.Log("No items in inventory!");
+                }
+            }
+            else if (actionType == BattleActionType.Defend)
             {
                 playerCharacter.Character.HealthManager.StartGuarding(1);
                 playerTurnState = PlayerBattleState.Waiting;
                 NextTurn();
             }
-
         }
         
         private void SelectSkill(BaseSkill skill)
