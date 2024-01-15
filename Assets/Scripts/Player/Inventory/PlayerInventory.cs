@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using BattleSystem.ScriptableObjects.Characters;
 using BeatDetection.DataStructures;
 using UnityEngine;
 using UnityEngine.Events;
@@ -31,7 +30,7 @@ namespace Player.Inventory
             }
         }
 
-        public void UseItem(PlayerController playerController, UUIDCharacterInstance playerCharacterInstance, InventoryItem item)
+        public void UseItem(PlayerController playerController, InventoryItem item)
         {
             lastPlayerController = playerController;
             switch (item.itemType)

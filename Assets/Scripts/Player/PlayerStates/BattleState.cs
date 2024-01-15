@@ -367,7 +367,7 @@ namespace Player.PlayerStates
                 if (inventoryItems.Count > 0)
                 {
                     var item = inventoryItems.First();
-                    playerController.playerInventory.UseItem(playerController, playerCharacter, item.Key);
+                    playerController.playerInventory.UseItem(playerController, item.Key);
                 }
                 else
                 {
