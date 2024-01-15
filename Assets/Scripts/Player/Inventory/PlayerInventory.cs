@@ -56,14 +56,14 @@ namespace Player.Inventory
             }
         }
 
-        private UnityAction<BeatResult> UseItemListener(InventoryItem item)
+        private void UseItemListener(InventoryItem item)
         {
             RemoveInventoryItem(item);
             if (lastPlayerController != null)
             {
-                lastPlayerController.PlayerUsedSkillEvent.RemoveListener(_ => UseItemListener(item));
+                Debug.Log("Removing listener");
+                lastPlayerController.PlayerUsedSkillEvent.RemoveAllListeners();
             }
-            return null;
         }
     }
 }
