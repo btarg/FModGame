@@ -9,7 +9,7 @@ namespace ScriptableObjects.Util.DataTypes
     public class CharacterStatsKeyValuePair
     {
         [SerializeField] public string characterID;
-        [SerializeField] public CharacterStats stats;
+        [SerializeField] public RawCharacterStats stats;
     }
 
     [Serializable]

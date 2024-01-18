@@ -8,59 +8,64 @@ namespace ScriptableObjects.Stats.CharacterStats
     [Serializable]
     public class CharacterStats : ScriptableObject
     {
-        [Tooltip("Health points of the character")] [Range(0, 1000)]
-        [SerializeField] public int MaxHP;
-        [Tooltip("Skill points of the character")] [Range(0, 1000)]
-        [SerializeField] public int MaxSP;
+        public RawCharacterStats rawCharacterStats;
+        public int MaxHP => rawCharacterStats.MaxHP;
+        public int MaxSP => rawCharacterStats.MaxSP;
         
-        [SerializeField]
-        [HideInInspector]
-        public int HP;
-        [SerializeField]
-        [HideInInspector]
-        public int SP;
-
-        [Tooltip("Multiplier for all types of damage")] [Range(0, 10)]
-        [SerializeField]
-        public float ATK;
-
-        [Tooltip("Percentage reduction of all incoming damage (0-1)")] [Range(0, 1)]
-        [SerializeField]
-        public float DEF;
-
-        [Tooltip("Percentage chance to evade an attack (0-1)")] [Range(0, 1)]
-        [SerializeField]
-        public float EVD;
-
-        [Tooltip("Vitality")] [Range(0, 1)] 
-        [SerializeField]
-        public float VIT;
-
-        [Header("Elemental Affinities")]
-        [SerializeField]
-        public ElementType[] Weaknesses;
-        [SerializeField]
-        public ElementStrength[] Strengths;
-        [SerializeField]
-        public int critDamageMultiplier = 2;
-
-        [Header("Level Up")]
-        [SerializeField] public int XPDroppedOnDeath;
-        [SerializeField] public int currentXP;
-        [SerializeField] public int currentLevel;
-        [SerializeField] public int XPToLevelUp;
-        [SerializeField] public int HPIncreasePerLevel;
-        [SerializeField] public int SPIncreasePerLevel;
-        [SerializeField] public int ATKIncreasePerLevel;
-        [SerializeField] public int DEFIncreasePerLevel;
-        [SerializeField] public int EVDIncreasePerLevel;
-
-        private void OnEnable()
+        public int HP
         {
-            HP = MaxHP;
-            SP = MaxSP;
+            get => rawCharacterStats.HP;
+            set => rawCharacterStats.HP = value;
         }
 
+        public int SP
+        {
+            get => rawCharacterStats.SP;
+            set => rawCharacterStats.SP = value;
+        }
+
+        public float ATK
+        {
+            get => rawCharacterStats.ATK;
+            set => rawCharacterStats.ATK = value;
+        }
+
+        public float DEF
+        {
+            get => rawCharacterStats.DEF;
+            set => rawCharacterStats.DEF = value;
+        }
+
+        public float EVD
+        {
+            get => rawCharacterStats.EVD;
+            set => rawCharacterStats.EVD = value;
+        }
+
+        public float VIT => rawCharacterStats.VIT;
+        public ElementType[] Weaknesses => rawCharacterStats.Weaknesses;
+        public ElementStrength[] Strengths => rawCharacterStats.Strengths;
+        public int critDamageMultiplier => rawCharacterStats.critDamageMultiplier;
+        public int XPDroppedOnDeath => rawCharacterStats.XPDroppedOnDeath;
+        public int currentXP
+        {
+            get => rawCharacterStats.currentXP;
+            set => rawCharacterStats.currentXP = value;
+        }
+
+        public int currentLevel
+        {
+            get => rawCharacterStats.currentLevel;
+            set => rawCharacterStats.currentLevel = value;
+        }
+
+        public int XPToLevelUp => rawCharacterStats.XPToLevelUp;
+        public int HPIncreasePerLevel => rawCharacterStats.HPIncreasePerLevel;
+        public int SPIncreasePerLevel => rawCharacterStats.SPIncreasePerLevel;
+        public float ATKIncreasePerLevel => rawCharacterStats.ATKIncreasePerLevel;
+        public float DEFIncreasePerLevel => rawCharacterStats.DEFIncreasePerLevel;
+        public float EVDIncreasePerLevel => rawCharacterStats.EVDIncreasePerLevel;
+        
         public float GetStat(StatType statType)
         {
             return statType switch
@@ -75,12 +80,11 @@ namespace ScriptableObjects.Stats.CharacterStats
             };
         }
         
-        
         public void GainXP(int amount, Action<CharacterStats, bool> callback)
         {
             bool leveledUp = false;
             currentXP += amount * (int)VIT;
-            if (currentXP >= XPToLevelUp * currentLevel)
+            if (XPToLevelUp != 0 && currentXP >= XPToLevelUp * currentLevel)
             {
                 currentXP -= (XPToLevelUp * currentLevel);
                 currentLevel++;
@@ -93,9 +97,7 @@ namespace ScriptableObjects.Stats.CharacterStats
                 EVD += EVDIncreasePerLevel;
                 leveledUp = true;
             }
-
             callback.Invoke(this, leveledUp);
         }
-        
     }
 }

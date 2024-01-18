@@ -49,12 +49,8 @@ namespace ScriptableObjects.Util.SaveLoad
             saveObject.inventoryItems = inventory;
         }
 
-        public static void SaveStats(string characterID, CharacterStats characterStats)
+        public static void SaveStats(string characterID, RawCharacterStats characterStats)
         {
-            Debug.Log("Saving character");
-            // log some stats from this character
-            Debug.Log($"SP: {characterStats.SP}");
-
             // save stats to file if a key doesn't exist
             if (!saveObject.characterStats.statsByCharacter.Exists(pair => pair.characterID == characterID))
             {

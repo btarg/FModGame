@@ -33,24 +33,33 @@ namespace ScriptableObjects.Characters
 
         private void Awake()
         {
+            InitCharacter(Stats.rawCharacterStats);
+        }
+        public void InitCharacter(RawCharacterStats rawCharacterStats, bool loadFromSave = true)
+        {
             HealthManager = CreateInstance<HealthManager>();
-            CharacterStats useStats = Stats;
-            var loadedSaveObject = SaveManager.Load();
-            if (loadedSaveObject.characterStats == null)
+            
+            CharacterStats useStats = CreateInstance<CharacterStats>();
+            useStats.rawCharacterStats = rawCharacterStats;
+
+            if (loadFromSave)
             {
-                Debug.LogError("Null stats! Everybody panic!!");
-                loadedSaveObject.characterStats = new CharacterStatsDictionary();
-            }
-            // Look up the CharacterStats in the dictionary
-            foreach (var statsKeyValuePair in loadedSaveObject.characterStats.statsByCharacter)
-            {
-                if (statsKeyValuePair.characterID == characterID)
+                var loadedSaveObject = SaveManager.Load();
+                if (loadedSaveObject.characterStats == null)
                 {
-                    useStats = statsKeyValuePair.stats;
-                    break;
+                    Debug.LogError("Null stats! Everybody panic!!");
+                    loadedSaveObject.characterStats = new CharacterStatsDictionary();
+                }
+                // Look up the CharacterStats in the dictionary
+                foreach (var statsKeyValuePair in loadedSaveObject.characterStats.statsByCharacter)
+                {
+                    if (statsKeyValuePair.characterID == characterID)
+                    {
+                        useStats.rawCharacterStats = statsKeyValuePair.stats;
+                        break;
+                    }
                 }
             }
-
             HealthManager.InitStats(useStats, UUID);
         }
     }

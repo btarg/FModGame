@@ -244,7 +244,7 @@ namespace Player.PlayerStates
                     {
                         // reinitialise stats with current stats
                         var currentStats = character.HealthManager.GetCurrentStats();
-                        partyMember.HealthManager.InitStats(currentStats, character.UUID, character.HealthManager.isAlive);
+                        partyMember.InitCharacter(currentStats, false);
                         
                         // save stats to save file
                         SaveManager.SaveStats(character.characterID, currentStats);

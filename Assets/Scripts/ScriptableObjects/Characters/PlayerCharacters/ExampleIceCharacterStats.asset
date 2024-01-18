@@ -12,26 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 868fe169bd4078b42b9d02504b402f1d, type: 3}
   m_Name: ExampleIceCharacterStats
   m_EditorClassIdentifier: 
-  MaxHP: 100
-  MaxSP: 100
-  HP: 100
-  SP: 100
-  ATK: 10
-  DEF: 0.25
-  EVD: 0.1
-  VIT: 0.25
-  Weaknesses: 00000000
-  Strengths:
-  - ElementType: 1
-    StrengthType: 0
-    ResistPercentage: 50
-  critDamageMultiplier: 2
-  XPDroppedOnDeath: 0
-  currentXP: 0
-  currentLevel: 1
-  XPToLevelUp: 50
-  HPIncreasePerLevel: 10
-  SPIncreasePerLevel: 10
-  ATKIncreasePerLevel: 5
-  DEFIncreasePerLevel: 5
-  EVDIncreasePerLevel: 5
+  rawCharacterStats:
+    MaxHP: 100
+    MaxSP: 50
+    HP: 0
+    SP: 0
+    ATK: 1.1
+    DEF: 0
+    EVD: 0.05
+    VIT: 0.1
+    Weaknesses: 00000000
+    Strengths:
+    - ElementType: 1
+      StrengthType: 0
+      ResistPercentage: 50
+    critDamageMultiplier: 2
+    XPDroppedOnDeath: 0
+    currentXP: 0
+    currentLevel: 1
+    XPToLevelUp: 50
+    HPIncreasePerLevel: 10
+    SPIncreasePerLevel: 10
+    ATKIncreasePerLevel: 0.05
+    DEFIncreasePerLevel: 0
+    EVDIncreasePerLevel: 0.05

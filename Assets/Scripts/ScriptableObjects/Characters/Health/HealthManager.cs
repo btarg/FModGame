@@ -68,9 +68,9 @@ namespace ScriptableObjects.Characters.Health
             
         }
         // function to return current stats
-        public CharacterStats GetCurrentStats()
+        public RawCharacterStats GetCurrentStats()
         {
-            return stats;
+            return stats.rawCharacterStats;
         }
 
         private int GetCurrentStat(StatType statType)
