@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BeatDetection.DataStructures;
 using ScriptableObjects.Skills;
 using ScriptableObjects.Util.DataTypes;
 using ScriptableObjects.Util.DataTypes.Inventory;
@@ -68,14 +69,14 @@ namespace Player.Inventory
             {
                 Debug.Log($"{inventoryItem.Key.displayName}:{inventoryItem.Value}");
             }
-            
+
             lastPlayerController = playerController;
             switch (item.itemType)
             {
                 case ItemType.ConsumableSkill:
                     lastPlayerController.SelectSkill(item.skill);
                     // when we use a skill, we need to remove it from the inventory
-                    lastPlayerController.PlayerUsedSkillEvent.AddListener(_ => UseItemListener(item));
+                    lastPlayerController.PlayerUsedItemSkillEvent.AddListener(UseItemListener);
                     break;
             }
         }
@@ -88,13 +89,19 @@ namespace Player.Inventory
                 Debug.Log($"Added {item.Value} {item.Key.displayName} to inventory");
             }
         }
-        private void UseItemListener(InventoryItem item)
+
+        private void UseItemListener(BeatResult result, InventoryItem inventoryItem)
         {
-            RemoveInventoryItem(item);
-            if (lastPlayerController != null)
+            if (inventoryItem != null)
             {
-                Debug.Log("Removing listener");
-                lastPlayerController.PlayerUsedSkillEvent.RemoveAllListeners();
+                // Remove the item
+                RemoveInventoryItem(inventoryItem);
+                if (lastPlayerController != null)
+                {
+                    Debug.Log("Removing listener");
+                    // Remove the listener
+                    lastPlayerController.PlayerUsedItemSkillEvent.RemoveListener(UseItemListener);
+                }
             }
         }
     }

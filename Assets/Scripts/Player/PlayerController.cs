@@ -37,7 +37,7 @@ namespace Player
 
         public UnityEvent<BaseSkill> SelectSkillEvent { get; } = new();
         public UnityEvent<BattleActionType> SelectActionEvent { get; } = new();
-        public UnityEvent<BeatResult> PlayerUsedSkillEvent { get; } = new();
+        public UnityEvent<BeatResult, InventoryItem> PlayerUsedItemSkillEvent { get; } = new();
         private void Awake()
         {
             playerInput = new PlayerInput();
@@ -83,9 +83,9 @@ namespace Player
             SaveManager.SaveInventory(playerInventory.inventoryItems);
         }
 
-        public void UseSelectedSkill(BeatResult result)
+        public void UseSelectedSkill(BeatResult result, InventoryItem item)
         {
-            PlayerUsedSkillEvent?.Invoke(result);
+            PlayerUsedItemSkillEvent?.Invoke(result, item);
         }
 
         public void SelectSkill(BaseSkill skill)

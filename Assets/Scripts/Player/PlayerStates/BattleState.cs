@@ -74,6 +74,7 @@ namespace Player.PlayerStates
         private List<Transform> shuffledEnemyPositions;
         private SkillListUI skillList;
         public List<Character> turnOrder;
+        private InventoryItem selectedItem;
 
         public BattleState(PlayerController _playerController, List<Character> _party, List<Character> _enemies, bool isAmbush = false, int _arena = 1)
         {
@@ -438,7 +439,7 @@ namespace Player.PlayerStates
             else
                 Debug.Log("Missed the attack!");
 
-            playerController.UseSelectedSkill(result);
+            playerController.UseSelectedSkill(result, selectedItem);
 
             playerStartedTurn = false;
             playerTurnState = PlayerBattleState.Waiting;
@@ -495,7 +496,15 @@ namespace Player.PlayerStates
                 var playerInventory = playerController.playerInventory;
                 
                 // TODO: replace this with an actual item selection menu
+                
+                if (playerInventory.inventoryItems.Count < 1)
+                {
+                    GoBack();
+                    return;
+                }
+                
                 var item = playerInventory.inventoryItems.First();
+                if (item.Key == null) return;
                 
                 int count = playerInventory.inventoryItems[item.Key];
                 if (count < 1)
@@ -504,6 +513,7 @@ namespace Player.PlayerStates
                     return;
                 }
                 playerController.playerInventory.UseItem(playerController, item.Key);
+                selectedItem = item.Key;
             }
             else if (actionType == BattleActionType.Defend)
             {
