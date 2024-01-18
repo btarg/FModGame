@@ -12,7 +12,7 @@ namespace ScriptableObjects.Characters
     [CreateAssetMenu(fileName = "NewCharacter", menuName = "Character")]
     public class Character : ScriptableObject
     {
-        public new string name;
+        public new string name { get; private set; }
         public string DisplayName;
         public Color Color;
         public CharacterStats Stats;
