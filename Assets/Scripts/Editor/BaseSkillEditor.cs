@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
 using ScriptableObjects.Skills;
 using ScriptableObjects.Stats.Modifiers;
+using ScriptableObjects.Util.DataTypes;
 using UnityEditor;
 using UnityEngine;
-using Util.DataTypes;
 
 namespace Editor
 {

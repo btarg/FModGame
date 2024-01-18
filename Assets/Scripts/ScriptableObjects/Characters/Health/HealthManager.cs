@@ -4,9 +4,9 @@ using System.Linq;
 using ScriptableObjects.Stats;
 using ScriptableObjects.Stats.CharacterStats;
 using ScriptableObjects.Stats.Modifiers;
+using ScriptableObjects.Util.DataTypes;
 using UnityEngine;
 using UnityEngine.Events;
-using Util.DataTypes;
 
 namespace ScriptableObjects.Characters.Health
 {

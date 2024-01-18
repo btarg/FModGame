@@ -1,7 +1,7 @@
 ﻿using ScriptableObjects.Skills;
 using UnityEngine;
 
-namespace Player.Inventory
+namespace ScriptableObjects.Util.DataTypes
 {
     public enum ItemType {
         Weapon,

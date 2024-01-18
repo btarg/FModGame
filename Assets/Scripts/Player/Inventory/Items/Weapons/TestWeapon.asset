@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59718d4f030741cd861c86273b2dd707, type: 3}
+  m_Name: TestWeapon
+  m_EditorClassIdentifier: 
+  displayName: Test Melee Weapon
+  description: It's kinda mid
+  itemType: 0
+  skill: {fileID: 11400000, guid: eb5fd6ed6649a2f4b870e31efb89f290, type: 2}
+  value: 1

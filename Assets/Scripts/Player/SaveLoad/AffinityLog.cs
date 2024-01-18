@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Util.DataTypes;
+using ScriptableObjects.Util.DataTypes;
 
 namespace Player.SaveLoad
 {

@@ -7,6 +7,7 @@ using Player.PlayerStates;
 using Player.SaveLoad;
 using ScriptableObjects.Characters;
 using ScriptableObjects.Skills;
+using ScriptableObjects.Util.DataTypes;
 using StateMachine;
 using UnityEngine;
 using UnityEngine.Events;

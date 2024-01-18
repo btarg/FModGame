@@ -1,6 +1,6 @@
 using System.Collections.Generic;
+using ScriptableObjects.Util.DataTypes;
 using UnityEngine;
-using Util.DataTypes;
 
 namespace ScriptableObjects.Stats.Modifiers
 {

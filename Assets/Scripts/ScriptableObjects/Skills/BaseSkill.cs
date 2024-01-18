@@ -1,7 +1,7 @@
 using ScriptableObjects.Characters;
 using ScriptableObjects.Stats.Modifiers;
+using ScriptableObjects.Util.DataTypes;
 using UnityEngine;
-using Util.DataTypes;
 
 namespace ScriptableObjects.Skills
 {

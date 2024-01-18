@@ -1,6 +1,6 @@
 using System;
 
-namespace Util.DataTypes
+namespace ScriptableObjects.Util.DataTypes
 {
     [Serializable]
     public enum ElementType

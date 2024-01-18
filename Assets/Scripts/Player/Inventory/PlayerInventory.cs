@@ -1,6 +1,7 @@
 using System.Collections.Generic;
+using ScriptableObjects.Util.DataTypes;
 using UnityEngine;
-using Util.DataTypes;
+
 namespace Player.Inventory
 {
     public class PlayerInventory

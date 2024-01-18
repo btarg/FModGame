@@ -327,7 +327,7 @@ namespace Player.PlayerStates
                 selectedTargets.Clear();
                 UpdateHealthUIs();
 
-                if (selectedSkill == playerCharacter.attackSkill)
+                if (selectedSkill == playerCharacter.weapon.skill)
                 {
                     // go back to selecting action if we are selecting the attack skill
                     playerTurnState = PlayerBattleState.SelectingAction;
@@ -353,7 +353,7 @@ namespace Player.PlayerStates
 
             if (actionType == BattleActionType.Attack)
             {
-                SelectSkill(playerCharacter.attackSkill);
+                SelectSkill(playerCharacter.weapon.skill);
             }
             else if (actionType == BattleActionType.Skill)
             {

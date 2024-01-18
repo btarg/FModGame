@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ScriptableObjects.Characters.Health;
 using ScriptableObjects.Skills;
 using ScriptableObjects.Stats.CharacterStats;
+using ScriptableObjects.Util.DataTypes;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -15,7 +16,9 @@ namespace ScriptableObjects.Characters
         public string DisplayName;
         public Color Color;
         public CharacterStats Stats;
-        public BaseSkill attackSkill;
+        
+        public InventoryItem weapon;
+        
         public List<BaseSkill> AvailableSkills;
         public bool IsPlayerCharacter;
         public GameObject prefab;

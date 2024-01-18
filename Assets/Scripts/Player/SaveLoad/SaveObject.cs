@@ -1,7 +1,7 @@
 ﻿using System;
 using Player.Inventory;
+using ScriptableObjects.Util.DataTypes;
 using UnityEngine;
-using Util.DataTypes;
 
 namespace Player.SaveLoad
 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Util.DataTypes
+namespace ScriptableObjects.Util.DataTypes
 {
     [Serializable]
     public class AffinityKeyValuePair
