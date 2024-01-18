@@ -1,15 +1,11 @@
-using System;
 using System.Collections.Generic;
-using BeatDetection.DataStructures;
 using UnityEngine;
-using UnityEngine.Events;
 using Util.DataTypes;
-
 namespace Player.Inventory
 {
     public class PlayerInventory
     {
-        public SerializableDictionary<InventoryItem, int> inventoryItems { get; private set; }
+        public SerializableDictionary<InventoryItem, int> inventoryItems { get; }
         private PlayerController lastPlayerController;
        
         public PlayerInventory(SerializableDictionary<InventoryItem, int> items)

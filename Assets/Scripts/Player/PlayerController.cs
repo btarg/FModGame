@@ -1,12 +1,12 @@
 using System.Collections.Generic;
-using BattleSystem.ScriptableObjects.Characters;
-using BattleSystem.ScriptableObjects.Skills;
 using BeatDetection.DataStructures;
 using BeatDetection.QTE;
 using Cinemachine;
 using Player.Inventory;
 using Player.PlayerStates;
 using Player.SaveLoad;
+using ScriptableObjects.Characters;
+using ScriptableObjects.Skills;
 using StateMachine;
 using UnityEngine;
 using UnityEngine.Events;
@@ -23,7 +23,7 @@ namespace Player
         private PlayerInput playerInput;
 
         public Character playerCharacter;
-        public CinemachineStateDrivenCamera stateDrivenCamera;
+        public CinemachineStateDrivenCamera stateDrivenCamera { get; private set; }
         public PlayerInventory playerInventory { get; private set; }
         [FormerlySerializedAs("inventoryItems")] public List<InventoryItem> defaultInventoryItems = new();
         public List<Character> party;

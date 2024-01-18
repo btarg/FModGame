@@ -1,7 +1,7 @@
 using UnityEngine;
 using Util.DataTypes;
 
-namespace BattleSystem.ScriptableObjects.Stats.CharacterStats
+namespace ScriptableObjects.Stats.CharacterStats
 {
     [CreateAssetMenu(fileName = "NewCharacterStats", menuName = "Character Stats")]
     public class CharacterStats : ScriptableObject
@@ -31,6 +31,7 @@ namespace BattleSystem.ScriptableObjects.Stats.CharacterStats
         [Header("Elemental Affinities")]
         public ElementType[] Weaknesses;
         public ElementStrength[] Strengths;
+        public int critDamageMultiplier = 2;
 
         [Header("Level Up")]
         public int currentXP;

@@ -1,14 +1,10 @@
 {
-    "name": "Project.Editor",
+    "name": "Project.ScriptableObjects",
     "rootNamespace": "",
     "references": [
-        "GUID:8da74b1dfeae08943bc53b7254b2de21",
-        "GUID:2f6787823d42a7540b7fbb8df835da25",
-        "GUID:a2606e07f1ec8de468f951f0ac9aa75b"
+        "Project.Util"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

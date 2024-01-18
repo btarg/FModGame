@@ -1,14 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using ScriptableObjects.Stats;
+using ScriptableObjects.Stats.CharacterStats;
+using ScriptableObjects.Stats.Modifiers;
 using UnityEngine;
 using UnityEngine.Events;
-using System;
-using System.Linq;
-using BattleSystem.ScriptableObjects.Stats.Modifiers;
-using BattleSystem.ScriptableObjects.Stats.CharacterStats;
-using System.Collections.Generic;
-using BattleSystem.ScriptableObjects.Stats;
 using Util.DataTypes;
 
-namespace BattleSystem.ScriptableObjects.Characters
+namespace ScriptableObjects.Characters.Health
 {
     [CreateAssetMenu(fileName = "NewHealthManager", menuName = "HealthManager")]
     public class HealthManager : ScriptableObject
@@ -21,8 +21,7 @@ namespace BattleSystem.ScriptableObjects.Characters
         public class OnDamageEvadedEvent : UnityEvent { }
         public class OnDeathEvent : UnityEvent<string> { }
         public class OnReviveEvent : UnityEvent<string> { }
-
-        public int critDamageMultiplier = 2;
+        
         public OnDamagedEvent OnDamage = new();
         public OnStrengthEncounteredEvent OnStrengthEncountered = new();
         public OnWeaknessEncounteredEvent OnWeaknessEncountered = new();
@@ -159,7 +158,7 @@ namespace BattleSystem.ScriptableObjects.Characters
                 {
                     // Critical hit!
                     OnWeaknessEncountered?.Invoke(elementType);
-                    damage *= critDamageMultiplier;
+                    damage *= stats.critDamageMultiplier;
                 }
             }
             
@@ -169,7 +168,7 @@ namespace BattleSystem.ScriptableObjects.Characters
             if (CurrentHP == 0) Die();
         }
 
-        public void Revive(UUIDCharacterInstance character, int amount)
+        public void Revive(Character character, int amount)
         {
             CurrentHP = amount;
             isAlive = true;

@@ -1,9 +1,9 @@
+using ScriptableObjects.Characters;
+using ScriptableObjects.Stats.Modifiers;
 using UnityEngine;
-using BattleSystem.ScriptableObjects.Characters;
-using BattleSystem.ScriptableObjects.Stats.Modifiers;
 using Util.DataTypes;
 
-namespace BattleSystem.ScriptableObjects.Skills
+namespace ScriptableObjects.Skills
 {
     [CreateAssetMenu(fileName = "NewSkill", menuName = "Skill")]
     public class BaseSkill : ScriptableObject
@@ -35,10 +35,8 @@ namespace BattleSystem.ScriptableObjects.Skills
             return Mathf.CeilToInt(baseDamage * character.Stats.ATK);
         }
 
-        public void Use(UUIDCharacterInstance userInstance, UUIDCharacterInstance targetInstance)
+        public void Use(Character user, Character target)
         {
-            var target = targetInstance.Character;
-            var user = userInstance.Character;
             Debug.Log($"{user.DisplayName} used {skillName} on {target.DisplayName}.");
             switch (skillType)
             {
@@ -62,7 +60,7 @@ namespace BattleSystem.ScriptableObjects.Skills
                     // Use the skill to revive
                     if (!target.HealthManager.isAlive)
                     {
-                        target.HealthManager.Revive(targetInstance, reviveAmount);
+                        target.HealthManager.Revive(target, reviveAmount);
                     }
                     break;
             }

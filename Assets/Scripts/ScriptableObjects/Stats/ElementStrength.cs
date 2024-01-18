@@ -1,7 +1,7 @@
 using UnityEngine;
 using Util.DataTypes;
 
-namespace BattleSystem.ScriptableObjects.Stats
+namespace ScriptableObjects.Stats
 {
     [System.Serializable]
     public struct ElementStrength

@@ -1,12 +1,12 @@
-using UnityEngine;
-using System.Collections.Generic;
 using System;
-using BattleSystem.ScriptableObjects.Skills;
-using BattleSystem.ScriptableObjects.Stats.CharacterStats;
-using UnityEngine.Serialization;
+using System.Collections.Generic;
+using ScriptableObjects.Characters.Health;
+using ScriptableObjects.Skills;
+using ScriptableObjects.Stats.CharacterStats;
+using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace BattleSystem.ScriptableObjects.Characters
+namespace ScriptableObjects.Characters
 {
     [CreateAssetMenu(fileName = "NewCharacter", menuName = "Character")]
     public class Character : ScriptableObject
@@ -15,21 +15,30 @@ namespace BattleSystem.ScriptableObjects.Characters
         public string DisplayName;
         public Color Color;
         public CharacterStats Stats;
-        // TODO: use a weapon item equipped by the character instead of a skill. The weapon holds the skill
         public BaseSkill attackSkill;
         public List<BaseSkill> AvailableSkills;
-        public HealthManager HealthManager;
         public bool IsPlayerCharacter;
-
         public GameObject prefab;
         
-        // name should be set to object name if its null or empty whitespace
+        public string UUID { get; private set; }
+        public HealthManager HealthManager { get; private set; }
+
         private void OnValidate()
         {
             if (string.IsNullOrWhiteSpace(name))
             {
                 name = ((Object)this).name;
             }
+        }
+        
+        public Character()
+        {
+            UUID = Guid.NewGuid().ToString();
+        }
+        private void OnEnable()
+        {
+            HealthManager = CreateInstance<HealthManager>();
+            HealthManager.InitStats(Stats, UUID);
         }
     }
 }

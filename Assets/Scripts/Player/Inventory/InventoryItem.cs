@@ -1,4 +1,4 @@
-﻿using BattleSystem.ScriptableObjects.Skills;
+﻿using ScriptableObjects.Skills;
 using UnityEngine;
 
 namespace Player.Inventory

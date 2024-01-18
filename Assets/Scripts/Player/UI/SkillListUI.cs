@@ -1,4 +1,4 @@
-using BattleSystem.ScriptableObjects.Characters;
+using ScriptableObjects.Characters;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -21,11 +21,11 @@ namespace Player.UI
             playerController = player.GetComponent<PlayerController>();
         }
     
-        public void PopulateList(UUIDCharacterInstance playerCharacter)
+        public void PopulateList(Character playerCharacter)
         {
             listDocument.rootVisualElement.Clear();
 
-            foreach (var skill in playerCharacter.Character.AvailableSkills)
+            foreach (var skill in playerCharacter.AvailableSkills)
             {
                 var instance = listElementTemplate.Instantiate();
                 instance.name = skill.name;
@@ -33,8 +33,8 @@ namespace Player.UI
 
                 string costType = skill.costsHP ? "HP" : "SP";
                 var skillButton = instance.Q<Button>("SkillButton");
-                skillButton.SetEnabled((skill.costsHP && playerCharacter.Character.HealthManager.CurrentHP >= skill.cost) ||
-                                       (!skill.costsHP && playerCharacter.Character.HealthManager.CurrentSP >= skill.cost));
+                skillButton.SetEnabled((skill.costsHP && playerCharacter.HealthManager.CurrentHP >= skill.cost) ||
+                                       (!skill.costsHP && playerCharacter.HealthManager.CurrentSP >= skill.cost));
                 skillButton.text = $"{skill.skillName} ({skill.cost} {costType})";
                 skillButton.clicked += () =>
                 {

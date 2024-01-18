@@ -7,7 +7,9 @@ namespace Util.DataTypes
     [Serializable]
     public class AffinityKeyValuePair
     {
+        [SerializeField]
         public string key;
+        [SerializeField]
         public AffinityData value;
     }
 

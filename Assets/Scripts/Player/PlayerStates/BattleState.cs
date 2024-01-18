@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BattleSystem;
-using BattleSystem.ScriptableObjects.Characters;
-using BattleSystem.ScriptableObjects.Skills;
+using ScriptableObjects.Characters;
 using BeatDetection;
 using BeatDetection.DataStructures;
-using Cinemachine;
 using Player.SaveLoad;
 using Player.UI;
+using ScriptableObjects.Skills;
 using StateMachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -38,9 +37,9 @@ namespace Player.PlayerStates
     public class BattleState : IState
     {
         private int currentTurnIndex;
-        public List<UUIDCharacterInstance> allCharacters;
-        public List<UUIDCharacterInstance> turnOrder;
-        public List<UUIDCharacterInstance> deadCharacters;
+        public List<Character> allCharacters;
+        public List<Character> turnOrder;
+        public List<Character> deadCharacters;
 
         private bool isPlayerTurn;
 
@@ -48,11 +47,11 @@ namespace Player.PlayerStates
         private bool playerStartedTurn;
 
         PlayerController playerController;
-        UUIDCharacterInstance playerCharacter;
+        Character playerCharacter;
 
         // Targeting system
         private PlayerBattleState playerTurnState;
-        private Dictionary<UUIDCharacterInstance, GameObject> characterGameObjects;
+        private Dictionary<Character, GameObject> characterGameObjects;
         private List<Transform> enemyPositions;
         private List<Transform> playerPositions;
         private List<GameObject> selectedTargets;
@@ -68,7 +67,6 @@ namespace Player.PlayerStates
         
         private Character currentPlayerCharacter;
         
-        
         private BaseSkill selectedSkill;
         private Canvas battleCanvas;
         private SkillListUI skillList;
@@ -78,10 +76,10 @@ namespace Player.PlayerStates
         {
             currentArena = _arena;
             playerController = _playerController;
-            playerCharacter = new UUIDCharacterInstance(playerController.playerCharacter);
+            playerCharacter = Object.Instantiate(playerController.playerCharacter);
 
             // Initialize the turn order with the player's party and the enemies
-            turnOrder = new List<UUIDCharacterInstance>();
+            turnOrder = new List<Character>();
             allCharacters = new();
             deadCharacters = new();
 
@@ -100,39 +98,39 @@ namespace Player.PlayerStates
         {
             playerController.SelectSkillEvent.AddListener(SelectSkill);
             
-            foreach (var uUIDCharacter in allCharacters)
+            foreach (var character in allCharacters)
             {
-                uUIDCharacter.Character.HealthManager.OnRevive.AddListener(OnCharacterRevived);
-                uUIDCharacter.Character.HealthManager.OnDeath.AddListener(OnCharacterDeath);
-                uUIDCharacter.Character.HealthManager.OnDamage.AddListener((healthManager, elementType, damage) =>
+                character.HealthManager.OnRevive.AddListener(OnCharacterRevived);
+                character.HealthManager.OnDeath.AddListener(OnCharacterDeath);
+                character.HealthManager.OnDamage.AddListener((healthManager, elementType, damage) =>
                 {
-                    Debug.Log($"{uUIDCharacter.Character.DisplayName} took {damage} {elementType} damage. ({healthManager.CurrentHP} HP left)");
+                    Debug.Log($"{character.DisplayName} took {damage} {elementType} damage. ({healthManager.CurrentHP} HP left)");
                     UpdateHealthUIs();
                     
                     // animate damage
-                    GameObject characterGameObject = characterGameObjects.FirstOrDefault(x => x.Key == uUIDCharacter).Value;
+                    GameObject characterGameObject = characterGameObjects.FirstOrDefault(x => x.Key == character).Value;
                     if (characterGameObject == null) return;
                     Animator animator = characterGameObject.GetComponentInChildren<Animator>();
                     if (animator != null) animator.SetTrigger(onHitAnimation);
                 });
-                uUIDCharacter.Character.HealthManager.OnDamageEvaded.AddListener(() =>
+                character.HealthManager.OnDamageEvaded.AddListener(() =>
                 {
-                    Debug.Log($"{uUIDCharacter.Character.DisplayName} evaded the attack!");
+                    Debug.Log($"{character.DisplayName} evaded the attack!");
                 });
-                uUIDCharacter.Character.HealthManager.OnWeaknessEncountered.AddListener((elementType) =>
+                character.HealthManager.OnWeaknessEncountered.AddListener((elementType) =>
                 {
-                    Debug.Log($"{uUIDCharacter.Character.DisplayName} is weak to {elementType}!");
-                    if (!AffinityLog.GetWeaknessesEncountered(uUIDCharacter.Character.name).Contains(elementType))
+                    Debug.Log($"{character.DisplayName} is weak to {elementType}!");
+                    if (!AffinityLog.GetWeaknessesEncountered(character.name).Contains(elementType))
                     {
-                        AffinityLog.LogWeakness(uUIDCharacter.Character.name, elementType);
+                        AffinityLog.LogWeakness(character.name, elementType);
                     }
                 });
-                uUIDCharacter.Character.HealthManager.OnStrengthEncountered.AddListener((elementType, strengthType) =>
+                character.HealthManager.OnStrengthEncountered.AddListener((elementType, strengthType) =>
                 {
-                    Debug.Log($"{uUIDCharacter.Character.DisplayName} is strong against {strengthType}!");
-                    if (!AffinityLog.GetStrengthsEncountered(uUIDCharacter.Character.name).ContainsKey(elementType))
+                    Debug.Log($"{character.DisplayName} is strong against {strengthType}!");
+                    if (!AffinityLog.GetStrengthsEncountered(character.name).ContainsKey(elementType))
                     {
-                        AffinityLog.LogStrength(uUIDCharacter.Character.name, elementType, strengthType);
+                        AffinityLog.LogStrength(character.name, elementType, strengthType);
                     }
                 });
             }
@@ -142,7 +140,7 @@ namespace Player.PlayerStates
         {
             foreach (var character in characters)
             {
-                var characterInstance = new UUIDCharacterInstance(character);
+                var characterInstance = Object.Instantiate(character);
                 turnOrder.Add(characterInstance);
                 allCharacters.Add(characterInstance);
             }
@@ -163,8 +161,8 @@ namespace Player.PlayerStates
                 turnOrder.Remove(deadCharacter);
                 characterGameObjects.Remove(deadCharacter);
 
-                deadCharacter.Character.HealthManager.OnRevive.RemoveListener(OnCharacterDeath);
-                Debug.Log($"{deadCharacter.Character.DisplayName} has died! UUID: {deadCharacter.UUID}");
+                deadCharacter.HealthManager.OnRevive.RemoveListener(OnCharacterDeath);
+                Debug.Log($"{deadCharacter.DisplayName} has died! UUID: {deadCharacter.UUID}");
             }
             else
             {
@@ -196,17 +194,17 @@ namespace Player.PlayerStates
 
             for (int i = 0; i < turnOrder.Count; i++)
             {
-                UUIDCharacterInstance character = turnOrder[i];
+                Character character = turnOrder[i];
                 SpawnCharacter(character, playerPositions, shuffledEnemyPositions, i);
             }
         }
 
-        private void SpawnCharacter(UUIDCharacterInstance characterInstance, List<Transform> playerPositions, List<Transform> enemyPositions, int index)
+        private void SpawnCharacter(Character characterInstance, List<Transform> playerPositions, List<Transform> enemyPositions, int index)
         {
-            Transform spawnMarker = characterInstance.Character.IsPlayerCharacter ? playerPositions[index] :
+            Transform spawnMarker = characterInstance.IsPlayerCharacter ? playerPositions[index] :
                 // Use modulo to wrap around if there are more enemies than positions
                 enemyPositions[index % enemyPositions.Count];
-            GameObject characterGameObject = Object.Instantiate(characterInstance.Character.prefab, spawnMarker.position, spawnMarker.rotation);
+            GameObject characterGameObject = Object.Instantiate(characterInstance.prefab, spawnMarker.position, spawnMarker.rotation);
             // associate this character with a GUID
             characterGameObject.name = characterInstance.UUID;
             characterGameObjects.Add(characterInstance, characterGameObject);
@@ -261,9 +259,8 @@ namespace Player.PlayerStates
             Debug.Log("Entered battle state!");
             // log turn order by getting each character's display name
             string turnOrderString = "";
-            foreach (var characterInstance in turnOrder)
+            foreach (var character in turnOrder)
             {
-                var character = characterInstance.Character;
                 turnOrderString += character.DisplayName + ", ";
                 // log the character's strengths and weaknesses
                 foreach (var strength in AffinityLog.GetStrengthsEncountered(character.name))
@@ -325,7 +322,7 @@ namespace Player.PlayerStates
                 selectedTargets.Clear();
                 UpdateHealthUIs();
 
-                if (selectedSkill == playerCharacter.Character.attackSkill)
+                if (selectedSkill == playerCharacter.attackSkill)
                 {
                     // go back to selecting action if we are selecting the attack skill
                     playerTurnState = PlayerBattleState.SelectingAction;
@@ -351,7 +348,7 @@ namespace Player.PlayerStates
 
             if (actionType == BattleActionType.Attack)
             {
-                SelectSkill(playerCharacter.Character.attackSkill);
+                SelectSkill(playerCharacter.attackSkill);
             }
             else if (actionType == BattleActionType.Skill)
             {
@@ -377,7 +374,7 @@ namespace Player.PlayerStates
             }
             else if (actionType == BattleActionType.Defend)
             {
-                playerCharacter.Character.HealthManager.StartGuarding(1);
+                playerCharacter.HealthManager.StartGuarding(1);
                 playerTurnState = PlayerBattleState.Waiting;
                 NextTurn();
             }
@@ -401,12 +398,12 @@ namespace Player.PlayerStates
                 if (selectedSkill.CanTargetEnemies)
                 {
                     // add all enemies to list of targets
-                    targetList.AddRange(characterGameObjects.Where(c => !c.Key.Character.IsPlayerCharacter).Select(c => c.Value));
+                    targetList.AddRange(characterGameObjects.Where(c => !c.Key.IsPlayerCharacter).Select(c => c.Value));
                 }
                 if (selectedSkill.CanTargetAllies)
                 {
                     // add all allies to list of targets
-                    targetList.AddRange(characterGameObjects.Where(c => c.Key.Character.IsPlayerCharacter).Select(c => c.Value));
+                    targetList.AddRange(characterGameObjects.Where(c => c.Key.IsPlayerCharacter).Select(c => c.Value));
                 }
 
                 selectedTargets.AddRange(targetList);
@@ -415,7 +412,7 @@ namespace Player.PlayerStates
             // set selected target to the first enemy in the list if the current selected skill targets enemies
             else if (selectedSkill.CanTargetEnemies)
             {
-                selectedTargets.Insert(0, characterGameObjects.FirstOrDefault(c => !c.Key.Character.IsPlayerCharacter).Value);
+                selectedTargets.Insert(0, characterGameObjects.FirstOrDefault(c => !c.Key.IsPlayerCharacter).Value);
             }
             else
             {
@@ -436,7 +433,7 @@ namespace Player.PlayerStates
                 
                 if (selectedTargets.Contains(target.Value))
                 {
-                    characterHealthUI.ShowHealth(target.Key.Character.HealthManager.CurrentHP);
+                    characterHealthUI.ShowHealth(target.Key.HealthManager.CurrentHP);
                 }
                 else
                 {
@@ -451,14 +448,14 @@ namespace Player.PlayerStates
             {
                 if (selectedSkill.costsHP)
                 {
-                    if (playerCharacter.Character.HealthManager.CurrentHP < selectedSkill.cost)
+                    if (playerCharacter.HealthManager.CurrentHP < selectedSkill.cost)
                     {
                         Debug.Log("Not enough HP!");
                         GoBack();
                         return;
                     }
                 }
-                else if (playerCharacter.Character.HealthManager.CurrentSP < selectedSkill.cost)
+                else if (playerCharacter.HealthManager.CurrentSP < selectedSkill.cost)
                 {
                     Debug.Log("Not enough SP!");
                     GoBack();
@@ -496,14 +493,14 @@ namespace Player.PlayerStates
             }
         }
 
-        private Dictionary<UUIDCharacterInstance, GameObject> GetTargetableObjects()
+        private Dictionary<Character, GameObject> GetTargetableObjects()
         {
-            var targetableObjects = new Dictionary<UUIDCharacterInstance, GameObject>(characterGameObjects);
+            var targetableObjects = new Dictionary<Character, GameObject>(characterGameObjects);
             if (!selectedSkill.CanTargetEnemies)
             {
                 foreach (var characterGameObject in characterGameObjects)
                 {
-                    if (!characterGameObject.Key.Character.IsPlayerCharacter)
+                    if (!characterGameObject.Key.IsPlayerCharacter)
                     {
                         targetableObjects.Remove(characterGameObject.Key);
                     }
@@ -513,7 +510,7 @@ namespace Player.PlayerStates
             {
                 foreach (var characterGameObject in characterGameObjects)
                 {
-                    if (characterGameObject.Key.Character.IsPlayerCharacter)
+                    if (characterGameObject.Key.IsPlayerCharacter)
                     {
                         targetableObjects.Remove(characterGameObject.Key);
                     }
@@ -557,7 +554,7 @@ namespace Player.PlayerStates
         public void Tick()
         {
             // If there are no more player characters, it's a defeat
-            if (!turnOrder.Exists(c => c.Character.IsPlayerCharacter))
+            if (!turnOrder.Exists(c => c.IsPlayerCharacter))
             {
                 Debug.Log("Defeat!");
                 playerController.EnterExplorationState();
@@ -565,14 +562,14 @@ namespace Player.PlayerStates
                 return;
             }
             // If there are no more enemy characters, it's a victory
-            else if (!turnOrder.Exists(c => !c.Character.IsPlayerCharacter))
+            else if (!turnOrder.Exists(c => !c.IsPlayerCharacter))
             {
                 Debug.Log("Victory!");
                 playerController.EnterExplorationState();
                 return;
             }
 
-            currentPlayerCharacter = turnOrder[currentTurnIndex].Character;
+            currentPlayerCharacter = turnOrder[currentTurnIndex];
             isPlayerTurn = currentPlayerCharacter.IsPlayerCharacter;
             if (isPlayerTurn)
             {
@@ -614,7 +611,7 @@ namespace Player.PlayerStates
             Debug.Log("Exiting battle");
             foreach (var characterInstance in allCharacters)
             {
-                var healthManager = characterInstance.Character.HealthManager;
+                var healthManager = characterInstance.HealthManager;
                 // Remove all stat modifiers from all characters outside of battle
                 healthManager.RemoveAllStatModifiers();
                 // Remove battle state listeners
@@ -626,10 +623,11 @@ namespace Player.PlayerStates
                     Object.Destroy(c);
                 }
 
-                if (characterInstance.Character.IsPlayerCharacter)
+                if (characterInstance.IsPlayerCharacter)
                 {
                     // save the player characters' stats for out of battle
-                    playerController.playerCharacter = characterInstance.Character;
+                    playerController.playerCharacter = characterInstance;
+                    
                 }
             }
             characterGameObjects.Clear();

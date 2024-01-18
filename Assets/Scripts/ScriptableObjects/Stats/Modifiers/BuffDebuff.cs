@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Util.DataTypes;
 
-namespace BattleSystem.ScriptableObjects.Stats.Modifiers
+namespace ScriptableObjects.Stats.Modifiers
 {
     [System.Serializable]
     public class StatModifier

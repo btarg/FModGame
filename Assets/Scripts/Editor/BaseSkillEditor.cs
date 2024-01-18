@@ -1,6 +1,6 @@
 #if UNITY_EDITOR
-using BattleSystem.ScriptableObjects.Skills;
-using BattleSystem.ScriptableObjects.Stats.Modifiers;
+using ScriptableObjects.Skills;
+using ScriptableObjects.Stats.Modifiers;
 using UnityEditor;
 using UnityEngine;
 using Util.DataTypes;
