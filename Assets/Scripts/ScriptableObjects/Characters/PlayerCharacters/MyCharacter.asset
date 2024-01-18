@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ddf7b4db15c6e9429afdaa006e96336, type: 3}
   m_Name: MyCharacter
   m_EditorClassIdentifier: 
-  name: MyCharacter
+  characterID: gigachad
   DisplayName: Ben
   Color: {r: 0.05842829, g: 0.6862634, b: 0.9528302, a: 0}
   Stats: {fileID: 11400000, guid: 68c5ec3f23482704f8a35bfc328a1b9e, type: 2}
@@ -24,3 +24,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a817c179c6460bd4a8a68edaf77de9f0, type: 2}
   IsPlayerCharacter: 1
   prefab: {fileID: 4115895661672177110, guid: a65f9e80e9260714d85417f54f754e63, type: 3}
+  HealthManager: {fileID: 0}

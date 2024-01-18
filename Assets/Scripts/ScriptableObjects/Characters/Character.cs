@@ -12,7 +12,7 @@ namespace ScriptableObjects.Characters
     [CreateAssetMenu(fileName = "NewCharacter", menuName = "Character")]
     public class Character : ScriptableObject
     {
-        public new string name { get; private set; }
+        public string characterID;
         public string DisplayName;
         public Color Color;
         public CharacterStats Stats;
@@ -29,17 +29,13 @@ namespace ScriptableObjects.Characters
         }
 
         public string UUID { get; }
-        public HealthManager HealthManager { get; private set; }
+        [HideInInspector]
+        public HealthManager HealthManager;
 
         private void OnEnable()
         {
             HealthManager = CreateInstance<HealthManager>();
             HealthManager.InitStats(Stats, UUID);
-        }
-
-        private void OnValidate()
-        {
-            if (string.IsNullOrWhiteSpace(name)) name = ((Object)this).name;
         }
     }
 }

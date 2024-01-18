@@ -12,8 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 868fe169bd4078b42b9d02504b402f1d, type: 3}
   m_Name: ExampleIceCharacterStats
   m_EditorClassIdentifier: 
-  HP: 100
-  SP: 100
+  MaxHP: 100
+  MaxSP: 100
+  HP: 0
+  SP: 0
   ATK: 1
   DEF: 0.1
   EVD: 0.1

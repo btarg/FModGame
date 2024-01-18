@@ -136,11 +136,11 @@ namespace Player.PlayerStates
                 turnOrderString += character.DisplayName + ", ";
                 // log the character's strengths and weaknesses
                 foreach (KeyValuePair<ElementType, StrengthType> strength in
-                         AffinityLog.GetStrengthsEncountered(character.name))
-                    Debug.Log($"{character.name} is strong against {strength.Key} {strength.Value}");
+                         AffinityLog.GetStrengthsEncountered(character.characterID))
+                    Debug.Log($"{character.characterID} is strong against {strength.Key} {strength.Value}");
 
-                foreach (ElementType weakness in AffinityLog.GetWeaknessesEncountered(character.name))
-                    Debug.Log($"{character.name} is weak to {weakness}");
+                foreach (ElementType weakness in AffinityLog.GetWeaknessesEncountered(character.characterID))
+                    Debug.Log($"{character.characterID} is weak to {weakness}");
             }
 
             Debug.Log("Turn order: " + turnOrderString);
@@ -221,34 +221,46 @@ namespace Player.PlayerStates
 
         public void OnExit()
         {
-            Debug.Log("Exiting battle");
             foreach (Character character in allCharacters)
             {
                 HealthManager healthManager = character.HealthManager;
+                Debug.Log(healthManager.isAlive ? $"{character.DisplayName} is alive" : $"{character.DisplayName} is dead");
+                
                 // Remove all stat modifiers from all characters outside of battle
                 healthManager.RemoveAllStatModifiers();
+                
                 // Remove battle state listeners
-                healthManager.OnRevive.RemoveListener(OnCharacterRevived);
-                healthManager.OnDeath.RemoveListener(OnCharacterDeath);
-                // Remove this character's game object
-                foreach (GameObject c in characterGameObjects.Values) Object.Destroy(c);
+                healthManager.OnRevive.RemoveAllListeners();
+                healthManager.OnDeath.RemoveAllListeners();
 
                 if (character.IsPlayerCharacter)
                 {
-                    // save the player characters' stats for out of battle
-                    playerController.playerCharacter = character;
+                    // get the player characters from the party list and update their stats with the current stats from battle state
+                    Character partyMember = playerController.party.FirstOrDefault(c => c.characterID == character.characterID);
+                    if (partyMember == null) partyMember = playerCharacter;
+                    
+                    if (partyMember != null)
+                    {
+                        // save characters to save file and set the character's stats to the current stats
+                        partyMember.Stats = character.HealthManager.GetCurrentStats();
+                        SaveManager.SaveHealthManager(character.characterID, character.HealthManager);
+                    }
                 }
-                else
+                else if (!character.HealthManager.isAlive)
                 {
-                    // dead enemy
-                    if (!character.HealthManager.isAlive)
-                        // give the whole party XP
-                        foreach (Character partyMember in playerController.party)
-                            partyMember.Stats.GainXP(character.Stats.XPDroppedOnDeath);
+                    // give the whole party XP for killed enemies
+                    foreach (Character partyMember in playerController.party)
+                    {
+                        GivePlayersXP(partyMember, character);
+                    }
+                    // the player is not in the party list
+                    GivePlayersXP(playerCharacter, character);
                 }
             }
 
-
+            // Remove all characters from the scene
+            foreach (GameObject c in characterGameObjects.Values) Object.Destroy(c);
+            // clear all battle values
             characterGameObjects.Clear();
             allCharacters.Clear();
             deadCharacters.Clear();
@@ -261,6 +273,17 @@ namespace Player.PlayerStates
             SaveManager.SaveInventory(playerController.playerInventory);
             AffinityLog.Save();
             SaveManager.SaveToFile();
+        }
+
+        private void GivePlayersXP(Character partyMember, Character characterKilled)
+        {
+            partyMember.Stats.GainXP(characterKilled.Stats.XPDroppedOnDeath, (stats, leveledUp) =>
+            {
+                // log stats and if we leveled up
+                Debug.Log($"{partyMember.DisplayName} gained {stats.XPDroppedOnDeath} XP.");
+                if (leveledUp)
+                    Debug.Log($"{partyMember.DisplayName} leveled up! New level: {stats.currentLevel}");
+            });
         }
 
         private void SetupEventListeners()
@@ -296,14 +319,14 @@ namespace Player.PlayerStates
                 character.HealthManager.OnWeaknessEncountered.AddListener(elementType =>
                 {
                     Debug.Log($"{character.DisplayName} is weak to {elementType}!");
-                    if (!AffinityLog.GetWeaknessesEncountered(character.name).Contains(elementType))
-                        AffinityLog.LogWeakness(character.name, elementType);
+                    if (!AffinityLog.GetWeaknessesEncountered(character.characterID).Contains(elementType))
+                        AffinityLog.LogWeakness(character.characterID, elementType);
                 });
                 character.HealthManager.OnStrengthEncountered.AddListener((elementType, strengthType) =>
                 {
                     Debug.Log($"{character.DisplayName} is strong against {strengthType}!");
-                    if (!AffinityLog.GetStrengthsEncountered(character.name).ContainsKey(elementType))
-                        AffinityLog.LogStrength(character.name, elementType, strengthType);
+                    if (!AffinityLog.GetStrengthsEncountered(character.characterID).ContainsKey(elementType))
+                        AffinityLog.LogStrength(character.characterID, elementType, strengthType);
                 });
             }
         }

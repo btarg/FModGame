@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ddf7b4db15c6e9429afdaa006e96336, type: 3}
   m_Name: MyFireEnemy
   m_EditorClassIdentifier: 
-  name: MyFireEnemyTest
+  characterID: fire_test_enemy
   DisplayName: Fire Enemy
   Color: {r: 1, g: 0.5372549, b: 0, a: 0}
   Stats: {fileID: 11400000, guid: e4d992caa714a21479c2425149cb4cba, type: 2}
-  attackSkill: {fileID: 11400000, guid: eb5fd6ed6649a2f4b870e31efb89f290, type: 2}
+  weapon: {fileID: 0}
   AvailableSkills:
   - {fileID: 11400000, guid: a817c179c6460bd4a8a68edaf77de9f0, type: 2}
-  HealthManager: {fileID: 11400000, guid: 240898812967a904eb8885c42b8b5447, type: 2}
   IsPlayerCharacter: 0
   prefab: {fileID: 4115895661672177110, guid: 9555c3fdc315c574e9e77d426d9bedd3, type: 3}
+  HealthManager: {fileID: 0}

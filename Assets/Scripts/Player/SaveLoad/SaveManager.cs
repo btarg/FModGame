@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Player.Inventory;
+using ScriptableObjects.Characters.Health;
 using ScriptableObjects.Util.DataTypes;
 using UnityEngine;
 
@@ -47,6 +49,11 @@ namespace Player.SaveLoad
         public static void SaveInventory(PlayerInventory inventory)
         {
             saveObject.inventoryItems = inventory.inventoryItems;
+        }
+        
+        public static void SaveHealthManager(string characterID, HealthManager healthManager)
+        {
+            saveObject.characterHealths.Add(characterID, healthManager);
         }
 
         public static bool SaveToFile()

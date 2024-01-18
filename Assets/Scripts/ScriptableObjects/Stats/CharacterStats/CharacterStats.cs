@@ -1,45 +1,65 @@
+using System;
 using ScriptableObjects.Util.DataTypes;
 using UnityEngine;
 
 namespace ScriptableObjects.Stats.CharacterStats
 {
     [CreateAssetMenu(fileName = "NewCharacterStats", menuName = "Character Stats")]
+    [Serializable]
     public class CharacterStats : ScriptableObject
     {
         [Tooltip("Health points of the character")] [Range(0, 1000)]
-        public int HP;
-
+        [SerializeField] public int MaxHP;
         [Tooltip("Skill points of the character")] [Range(0, 1000)]
+        [SerializeField] public int MaxSP;
+        
+        [SerializeField]
+        [HideInInspector]
+        public int HP;
+        [SerializeField]
+        [HideInInspector]
         public int SP;
 
         [Tooltip("Multiplier for all types of damage")] [Range(0, 10)]
+        [SerializeField]
         public float ATK;
 
         [Tooltip("Percentage reduction of all incoming damage (0-1)")] [Range(0, 1)]
+        [SerializeField]
         public float DEF;
 
         [Tooltip("Percentage chance to evade an attack (0-1)")] [Range(0, 1)]
+        [SerializeField]
         public float EVD;
 
-        [Tooltip("Vitality")] [Range(0, 1)] public float VIT;
+        [Tooltip("Vitality")] [Range(0, 1)] 
+        [SerializeField]
+        public float VIT;
 
-        [Header("Elemental Affinities")] public ElementType[] Weaknesses;
-
+        [Header("Elemental Affinities")]
+        [SerializeField]
+        public ElementType[] Weaknesses;
+        [SerializeField]
         public ElementStrength[] Strengths;
+        [SerializeField]
         public int critDamageMultiplier = 2;
 
-        [Header("Level Up")] public int XPDroppedOnDeath;
+        [Header("Level Up")]
+        [SerializeField] public int XPDroppedOnDeath;
+        [SerializeField] public int currentXP;
+        [SerializeField] public int currentLevel;
+        [SerializeField] public int XPToLevelUp;
+        [SerializeField] public int HPIncreasePerLevel;
+        [SerializeField] public int SPIncreasePerLevel;
+        [SerializeField] public int ATKIncreasePerLevel;
+        [SerializeField] public int DEFIncreasePerLevel;
+        [SerializeField] public int EVDIncreasePerLevel;
 
-        public int currentXP;
-        public int currentLevel;
-        public int XPToLevelUp;
-        public int HPIncreasePerLevel;
-        public int SPIncreasePerLevel;
-        public int ATKIncreasePerLevel;
-        public int DEFIncreasePerLevel;
-        public int EVDIncreasePerLevel;
-        public int MaxHP => HP;
-        public int MaxSP => SP;
+        private void OnEnable()
+        {
+            HP = MaxHP;
+            SP = MaxSP;
+        }
 
         public float GetStat(StatType statType)
         {
@@ -54,25 +74,28 @@ namespace ScriptableObjects.Stats.CharacterStats
                 _ => 0
             };
         }
-
-        public void GainXP(int amount)
+        
+        
+        public void GainXP(int amount, Action<CharacterStats, bool> callback)
         {
+            bool leveledUp = false;
             currentXP += amount * (int)VIT;
+            if (currentXP >= XPToLevelUp * currentLevel)
+            {
+                currentXP -= (XPToLevelUp * currentLevel);
+                currentLevel++;
 
-            while (currentXP >= XPToLevelUp * currentLevel) LevelUp();
+                // Increase base stats
+                HP += HPIncreasePerLevel;
+                SP += SPIncreasePerLevel;
+                ATK += ATKIncreasePerLevel;
+                DEF += DEFIncreasePerLevel;
+                EVD += EVDIncreasePerLevel;
+                leveledUp = true;
+            }
+
+            callback.Invoke(this, leveledUp);
         }
-
-        private void LevelUp()
-        {
-            currentXP -= XPToLevelUp;
-            currentLevel++;
-
-            // Increase base stats
-            HP += HPIncreasePerLevel;
-            SP += SPIncreasePerLevel;
-            ATK += ATKIncreasePerLevel;
-            DEF += DEFIncreasePerLevel;
-            EVD += EVDIncreasePerLevel;
-        }
+        
     }
 }

@@ -62,8 +62,13 @@ namespace ScriptableObjects.Characters.Health
             stats = Instantiate(_stats);
             UUID = _UUID;
             // initialise max HP and SP
-            MaxHP = stats.HP;
-            MaxSP = stats.SP;
+            MaxHP = stats.MaxHP;
+            MaxSP = stats.MaxSP;
+        }
+        // function to return current stats
+        public CharacterStats GetCurrentStats()
+        {
+            return stats;
         }
 
         private int GetCurrentStat(StatType statType)
