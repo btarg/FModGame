@@ -7,6 +7,7 @@ using Player.PlayerStates;
 using ScriptableObjects.Characters;
 using ScriptableObjects.Skills;
 using ScriptableObjects.Util.DataTypes;
+using ScriptableObjects.Util.DataTypes.Inventory;
 using ScriptableObjects.Util.SaveLoad;
 using StateMachine;
 using UnityEngine;
@@ -23,7 +24,6 @@ namespace Player
         public Character playerCharacter;
 
         [FormerlySerializedAs("inventoryItems")]
-        public List<InventoryItem> defaultInventoryItems = new();
 
         public List<Character> party;
         public List<Character> enemies;
@@ -38,7 +38,6 @@ namespace Player
         public UnityEvent<BaseSkill> SelectSkillEvent { get; } = new();
         public UnityEvent<BattleActionType> SelectActionEvent { get; } = new();
         public UnityEvent<BeatResult> PlayerUsedSkillEvent { get; } = new();
-
         private void Awake()
         {
             playerInput = new PlayerInput();
@@ -51,11 +50,6 @@ namespace Player
 
             // load inventory from a file and add default items
             playerInventory = new PlayerInventory(SaveManager.Load().inventoryItems);
-            if (playerInventory.inventoryItems.Count == 0)
-                playerInventory.LoadInventoryItems(defaultInventoryItems);
-            else
-                foreach (KeyValuePair<InventoryItem, int> item in playerInventory.inventoryItems)
-                    Debug.Log($"Loaded {item.Key.displayName} x {item.Value} from save file.");
         }
 
         private void Start()

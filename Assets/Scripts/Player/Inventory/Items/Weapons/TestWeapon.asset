@@ -9,11 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59718d4f030741cd861c86273b2dd707, type: 3}
+  m_Script: {fileID: 11500000, guid: 0e5ceb433bf247b99ef98ac8c4063b56, type: 3}
   m_Name: TestWeapon
   m_EditorClassIdentifier: 
-  displayName: Test Melee Weapon
-  description: It's kinda mid
-  itemType: 0
-  skill: {fileID: 11400000, guid: eb5fd6ed6649a2f4b870e31efb89f290, type: 2}
-  value: 1
+  rawInventoryItem:
+    displayName: Test weapon
+    description: test
+    itemType: 0
+    skill: {fileID: 11400000, guid: eb5fd6ed6649a2f4b870e31efb89f290, type: 2}
+    value: 0

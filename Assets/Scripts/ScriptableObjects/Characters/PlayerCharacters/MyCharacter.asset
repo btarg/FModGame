@@ -16,7 +16,7 @@ MonoBehaviour:
   DisplayName: Ben
   Color: {r: 0.05842829, g: 0.6862634, b: 0.9528302, a: 0}
   Stats: {fileID: 11400000, guid: 68c5ec3f23482704f8a35bfc328a1b9e, type: 2}
-  weapon: {fileID: 11400000, guid: 49642e376aaf04f4b8dd4cf033a10ae1, type: 2}
+  weapon: {fileID: 11400000, guid: cd63beb5699595147a27f5d5d03a3299, type: 2}
   AvailableSkills:
   - {fileID: 11400000, guid: aedeece218cd1444a89c3948a5879813, type: 2}
   - {fileID: 11400000, guid: 12df987ba187c534cac4f4b4626121bd, type: 2}

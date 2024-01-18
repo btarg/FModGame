@@ -9,6 +9,7 @@ using ScriptableObjects.Characters;
 using ScriptableObjects.Characters.Health;
 using ScriptableObjects.Skills;
 using ScriptableObjects.Util.DataTypes;
+using ScriptableObjects.Util.DataTypes.Inventory;
 using ScriptableObjects.Util.SaveLoad;
 using StateMachine;
 using UnityEngine;
@@ -257,8 +258,6 @@ namespace Player.PlayerStates
                     {
                         GivePlayersXP(partyMember, character);
                     }
-                    // the player is not in the party list
-                    GivePlayersXP(playerCharacter, character);
                 }
             }
 
@@ -273,8 +272,9 @@ namespace Player.PlayerStates
             playerInput.Dispose();
             battleCanvas.enabled = false;
             playerController.stateDrivenCamera.m_AnimatedTarget.SetBool(inBattle, false);
-
+            
             SaveManager.SaveInventory(playerController.playerInventory.inventoryItems);
+            
             AffinityLog.Save();
             SaveManager.SaveToFile();
         }
@@ -492,18 +492,18 @@ namespace Player.PlayerStates
             }
             else if (actionType == BattleActionType.Item)
             {
-                SerializableDictionary<InventoryItem, int> inventoryItems =
-                    playerController.playerInventory.inventoryItems;
-                if (inventoryItems.Count > 0)
+                var playerInventory = playerController.playerInventory;
+                
+                // TODO: replace this with an actual item selection menu
+                var item = playerInventory.inventoryItems.First();
+                
+                int count = playerInventory.inventoryItems[item.Key];
+                if (count < 1)
                 {
-                    KeyValuePair<InventoryItem, int> item = inventoryItems.First();
-                    playerController.playerInventory.UseItem(playerController, item.Key);
-                }
-                else
-                {
-                    Debug.Log("No items in inventory!");
                     GoBack();
+                    return;
                 }
+                playerController.playerInventory.UseItem(playerController, item.Key);
             }
             else if (actionType == BattleActionType.Defend)
             {

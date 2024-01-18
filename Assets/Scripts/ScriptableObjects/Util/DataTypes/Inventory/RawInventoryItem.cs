@@ -2,7 +2,7 @@
 using ScriptableObjects.Skills;
 using UnityEngine;
 
-namespace ScriptableObjects.Util.DataTypes
+namespace ScriptableObjects.Util.DataTypes.Inventory
 {
     [Serializable]
     public enum ItemType
@@ -13,10 +13,9 @@ namespace ScriptableObjects.Util.DataTypes
         QuestItem,
         KeyItem
     }
-
-    [CreateAssetMenu(fileName = "InventoryItem", menuName = "Inventory Item")]
+    
     [Serializable]
-    public class InventoryItem : ScriptableObject
+    public class RawInventoryItem
     {
         [SerializeField]
         public string displayName;

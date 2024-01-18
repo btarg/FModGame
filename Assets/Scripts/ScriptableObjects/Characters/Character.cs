@@ -4,6 +4,7 @@ using ScriptableObjects.Characters.Health;
 using ScriptableObjects.Skills;
 using ScriptableObjects.Stats.CharacterStats;
 using ScriptableObjects.Util.DataTypes;
+using ScriptableObjects.Util.DataTypes.Inventory;
 using ScriptableObjects.Util.SaveLoad;
 using UnityEngine;
 using Object = UnityEngine.Object;

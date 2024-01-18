@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using ScriptableObjects.Stats.CharacterStats;
 using ScriptableObjects.Util.DataTypes;
+using ScriptableObjects.Util.DataTypes.Inventory;
 using UnityEngine;
 
 namespace ScriptableObjects.Util.SaveLoad
@@ -44,9 +45,19 @@ namespace ScriptableObjects.Util.SaveLoad
             saveObject.affinityLogDictionary = log;
         }
 
-        public static void SaveInventory(SerializableDictionary<InventoryItem, int> inventory)
+        public static void SaveInventory(SerializableDictionary<RawInventoryItem, int> inventory)
         {
             saveObject.inventoryItems = inventory;
+        }
+        public static void SaveInventory(SerializableDictionary<InventoryItem, int> rawPlayerInventoryItems)
+        {
+            // Get the raw inventory items from the player inventory and save them to a file
+            SerializableDictionary<RawInventoryItem, int> items = new();
+            foreach (KeyValuePair<InventoryItem, int> inventoryItem in rawPlayerInventoryItems)
+            {
+                items.Add(inventoryItem.Key.rawInventoryItem, inventoryItem.Value);
+            }
+            SaveInventory(items);
         }
 
         public static void SaveStats(string characterID, RawCharacterStats characterStats)
@@ -82,5 +93,7 @@ namespace ScriptableObjects.Util.SaveLoad
 
             return true;
         }
+
+        
     }
 }

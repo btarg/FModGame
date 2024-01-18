@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using ScriptableObjects.Skills;
 using ScriptableObjects.Util.DataTypes;
+using ScriptableObjects.Util.DataTypes.Inventory;
 using UnityEngine;
 
 namespace Player.Inventory
@@ -8,28 +10,65 @@ namespace Player.Inventory
     {
         private PlayerController lastPlayerController;
 
-        public PlayerInventory(SerializableDictionary<InventoryItem, int> items)
+        public PlayerInventory(SerializableDictionary<RawInventoryItem, int> items)
         {
-            inventoryItems = items;
+            LoadInventoryItems(items);
+            // for debugging, add a default item
+            var item = new RawInventoryItem();
+            item.itemType = ItemType.ConsumableSkill;
+            item.displayName = "Test Item";
+            item.description = "This is a test item";
+            item.skill = ScriptableObject.CreateInstance<BaseSkill>();
+            item.skill.skillName = "Test Skill";
+            item.skill.description = "This is a test skill";
+            item.skill.skillType = SkillType.Offensive;
+            item.skill.CanTargetEnemies = true;
+            item.skill.CanTargetAllies = true;
+            item.skill.TargetsAll = false;
+            item.skill.cost = 0;
+            item.skill.MaxDamage = 15;
+            item.skill.MinDamage = 5;
+            item.skill.IsAffectedByATK = true;
+            item.skill.elementType = ElementType.Phys;
+            AddInventoryItem(item, 3);
         }
 
-        public SerializableDictionary<InventoryItem, int> inventoryItems { get; }
+        public SerializableDictionary<InventoryItem, int> inventoryItems { get; } = new();
 
-        public void AddInventoryItem(InventoryItem item, int count)
+        public void AddInventoryItem(RawInventoryItem rawItem, int count = 1)
         {
-            // if already exists, add to the count, otherwise add a new entry
-            if (!inventoryItems.TryAdd(item, count)) inventoryItems[item] += count;
+            // try to create an instance of the inventory item and set its raw item to rawItem
+            InventoryItem item = ScriptableObject.CreateInstance<InventoryItem>();
+            item.rawInventoryItem = rawItem;
+            // then we check if the item is already in the inventory and just update the count if it is
+            if (!inventoryItems.TryAdd(item, count))
+            {
+                inventoryItems[item] += count;
+            }
         }
 
         public void RemoveInventoryItem(InventoryItem item, int count = 1)
         {
-            if (!inventoryItems.ContainsKey(item)) return;
-            inventoryItems[item] -= count;
-            if (inventoryItems[item] <= 0) inventoryItems.Remove(item);
+            // if an item exists reduce its count
+            if (inventoryItems.ContainsKey(item))
+            {
+                inventoryItems[item] -= count;
+                // if the count is 0, remove the item from the inventory
+                if (inventoryItems[item] == 0)
+                {
+                    inventoryItems.Remove(item);
+                }
+            }
         }
 
         public void UseItem(PlayerController playerController, InventoryItem item)
         {
+            // log the current inventory in the format item:count
+            foreach (KeyValuePair<InventoryItem, int> inventoryItem in inventoryItems)
+            {
+                Debug.Log($"{inventoryItem.Key.displayName}:{inventoryItem.Value}");
+            }
+            
             lastPlayerController = playerController;
             switch (item.itemType)
             {
@@ -41,11 +80,14 @@ namespace Player.Inventory
             }
         }
 
-        public void LoadInventoryItems(List<InventoryItem> items)
+        public void LoadInventoryItems(SerializableDictionary<RawInventoryItem, int> items)
         {
-            foreach (InventoryItem item in items) AddInventoryItem(item, 1);
+            foreach (KeyValuePair<RawInventoryItem, int> item in items)
+            {
+                AddInventoryItem(item.Key, item.Value);
+                Debug.Log($"Added {item.Value} {item.Key.displayName} to inventory");
+            }
         }
-
         private void UseItemListener(InventoryItem item)
         {
             RemoveInventoryItem(item);
