@@ -15,6 +15,5 @@ MonoBehaviour:
   displayName: Test Item
   description: Hello world!
   itemType: 2
-  buffDebuff: {fileID: 0}
-  skill: {fileID: 11400000, guid: a817c179c6460bd4a8a68edaf77de9f0, type: 2}
+  skill: {fileID: 11400000, guid: aedeece218cd1444a89c3948a5879813, type: 2}
   value: 50

@@ -8,6 +8,7 @@ using BeatDetection;
 using BeatDetection.DataStructures;
 using Player.SaveLoad;
 using Player.UI;
+using ScriptableObjects.Characters.Health;
 using ScriptableObjects.Skills;
 using StateMachine;
 using UnityEngine;
@@ -102,6 +103,11 @@ namespace Player.PlayerStates
             {
                 character.HealthManager.OnRevive.AddListener(OnCharacterRevived);
                 character.HealthManager.OnDeath.AddListener(OnCharacterDeath);
+                character.HealthManager.OnHealed.AddListener((target, healer, amount) =>
+                {
+                    Debug.Log($"{healer.DisplayName} healed {target.DisplayName} for {amount} HP. ({target.HealthManager.CurrentHP} HP left)");
+                    UpdateHealthUIs();
+                });
                 character.HealthManager.OnDamage.AddListener((healthManager, elementType, damage) =>
                 {
                     Debug.Log($"{character.DisplayName} took {damage} {elementType} damage. ({healthManager.CurrentHP} HP left)");
@@ -146,7 +152,7 @@ namespace Player.PlayerStates
             }
         }
 
-        private void OnCharacterDeath(string uuid)
+        private void OnCharacterDeath(string uuid, HealthManager killer)
         {
             // add character to dead characters
             var deadCharacter = turnOrder.FirstOrDefault(c => c.UUID == uuid);
@@ -173,7 +179,6 @@ namespace Player.PlayerStates
 
         public void SwitchCameraState(int arenaCam)
         {
-            // TODO: use hashes instead of strings
             playerController.stateDrivenCamera.m_AnimatedTarget.SetInteger(cam, arenaCam);
         }
 
@@ -199,15 +204,15 @@ namespace Player.PlayerStates
             }
         }
 
-        private void SpawnCharacter(Character characterInstance, List<Transform> playerPositions, List<Transform> enemyPositions, int index)
+        private void SpawnCharacter(Character characterToSpawn, List<Transform> _playerPositions, List<Transform> _enemyPositions, int index)
         {
-            Transform spawnMarker = characterInstance.IsPlayerCharacter ? playerPositions[index] :
+            Transform spawnMarker = characterToSpawn.IsPlayerCharacter ? _playerPositions[index] :
                 // Use modulo to wrap around if there are more enemies than positions
-                enemyPositions[index % enemyPositions.Count];
-            GameObject characterGameObject = Object.Instantiate(characterInstance.prefab, spawnMarker.position, spawnMarker.rotation);
+                _enemyPositions[index % enemyPositions.Count];
+            GameObject characterGameObject = Object.Instantiate(characterToSpawn.prefab, spawnMarker.position, spawnMarker.rotation);
             // associate this character with a GUID
-            characterGameObject.name = characterInstance.UUID;
-            characterGameObjects.Add(characterInstance, characterGameObject);
+            characterGameObject.name = characterToSpawn.UUID;
+            characterGameObjects.Add(characterToSpawn, characterGameObject);
         }
 
         private List<Transform> Shuffle(List<Transform> toShuffle)
@@ -359,8 +364,6 @@ namespace Player.PlayerStates
             }
             else if (actionType == BattleActionType.Item)
             {
-                // TODO: implement items
-                // get the first item in the inventory and use it
                 var inventoryItems = playerController.playerInventory.inventoryItems;
                 if (inventoryItems.Count > 0)
                 {
@@ -370,6 +373,7 @@ namespace Player.PlayerStates
                 else
                 {
                     Debug.Log("No items in inventory!");
+                    GoBack();
                 }
             }
             else if (actionType == BattleActionType.Defend)
@@ -609,9 +613,9 @@ namespace Player.PlayerStates
         public void OnExit()
         {
             Debug.Log("Exiting battle");
-            foreach (var characterInstance in allCharacters)
+            foreach (var character in allCharacters)
             {
-                var healthManager = characterInstance.HealthManager;
+                var healthManager = character.HealthManager;
                 // Remove all stat modifiers from all characters outside of battle
                 healthManager.RemoveAllStatModifiers();
                 // Remove battle state listeners
@@ -623,13 +627,26 @@ namespace Player.PlayerStates
                     Object.Destroy(c);
                 }
 
-                if (characterInstance.IsPlayerCharacter)
+                if (character.IsPlayerCharacter)
                 {
                     // save the player characters' stats for out of battle
-                    playerController.playerCharacter = characterInstance;
-                    
+                    playerController.playerCharacter = character;
+                }
+                else
+                {
+                    // dead enemy
+                    if (!character.HealthManager.isAlive)
+                    {
+                        // give the whole party XP
+                        foreach (var partyMember in playerController.party)
+                        {
+                            partyMember.Stats.GainXP(character.Stats.XPDroppedOnDeath);
+                        }
+                    }
                 }
             }
+            
+            
             characterGameObjects.Clear();
             allCharacters.Clear();
             deadCharacters.Clear();
@@ -652,7 +669,7 @@ namespace Player.PlayerStates
             selectedTargets.Clear();
         }
 
-        private void OnCharacterRevived(string uuid)
+        private void OnCharacterRevived(string uuid, HealthManager reviver)
         {
             // add the character back to the turn order
             var character = deadCharacters.FirstOrDefault(c => c.UUID == uuid);

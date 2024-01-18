@@ -27,6 +27,10 @@ namespace ScriptableObjects.Stats.CharacterStats
         [Tooltip("Percentage chance to evade an attack (0-1)")]
         [Range(0, 1)]
         public float EVD;
+        
+        [Tooltip("Vitality")]
+        [Range(0, 1 )]
+        public float VIT;
 
         [Header("Elemental Affinities")]
         public ElementType[] Weaknesses;
@@ -34,6 +38,7 @@ namespace ScriptableObjects.Stats.CharacterStats
         public int critDamageMultiplier = 2;
 
         [Header("Level Up")]
+        public int XPDroppedOnDeath;
         public int currentXP;
         public int currentLevel;
         public int XPToLevelUp;
@@ -52,15 +57,16 @@ namespace ScriptableObjects.Stats.CharacterStats
                 StatType.ATK => ATK,
                 StatType.DEF => DEF,
                 StatType.EVD => EVD,
+                StatType.VIT => VIT,
                 _ => 0,
             };
         }
 
         public void GainXP(int amount)
         {
-            currentXP += amount;
-
-            while (currentXP >= XPToLevelUp)
+            currentXP += (amount * (int)VIT);
+            
+            while (currentXP >= (XPToLevelUp * currentLevel))
             {
                 LevelUp();
             }

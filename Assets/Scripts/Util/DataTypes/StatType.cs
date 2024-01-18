@@ -9,6 +9,7 @@ namespace Util.DataTypes
         SP,
         ATK,
         DEF,
-        EVD
+        EVD,
+        VIT
     }
 }

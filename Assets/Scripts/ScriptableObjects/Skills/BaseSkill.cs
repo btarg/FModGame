@@ -50,7 +50,7 @@ namespace ScriptableObjects.Skills
                     break;
                 case SkillType.Heal:
                     // Use the skill to heal
-                    target.HealthManager.Heal(healAmount);
+                    target.HealthManager.Heal(target, user, healAmount);
                     break;
                 case SkillType.ReplenishSP:
                     // Use the skill to replenish SP
@@ -60,7 +60,7 @@ namespace ScriptableObjects.Skills
                     // Use the skill to revive
                     if (!target.HealthManager.isAlive)
                     {
-                        target.HealthManager.Revive(target, reviveAmount);
+                        target.HealthManager.Revive(target, user.HealthManager, reviveAmount);
                     }
                     break;
             }

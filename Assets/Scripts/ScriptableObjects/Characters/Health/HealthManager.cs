@@ -16,11 +16,13 @@ namespace ScriptableObjects.Characters.Health
         public bool isAlive = true;
 
         public class OnDamagedEvent : UnityEvent<HealthManager, ElementType, int> { }
+        public class OnHealedEvent : UnityEvent<Character, Character, int> { }
         public class OnStrengthEncounteredEvent : UnityEvent<ElementType, StrengthType> { }
         public class OnWeaknessEncounteredEvent : UnityEvent<ElementType> { }
         public class OnDamageEvadedEvent : UnityEvent { }
-        public class OnDeathEvent : UnityEvent<string> { }
-        public class OnReviveEvent : UnityEvent<string> { }
+        // string UUID, health manager killer
+        public class OnDeathEvent : UnityEvent<string, HealthManager> { }
+        public class OnReviveEvent : UnityEvent<string, HealthManager> { }
         
         public OnDamagedEvent OnDamage = new();
         public OnStrengthEncounteredEvent OnStrengthEncountered = new();
@@ -28,7 +30,7 @@ namespace ScriptableObjects.Characters.Health
         public OnDeathEvent OnDeath = new();
         public OnReviveEvent OnRevive = new();
         public OnDamageEvadedEvent OnDamageEvaded = new();
-
+        public OnHealedEvent OnHealed = new();
 
         private CharacterStats stats;
         private string UUID;
@@ -165,21 +167,21 @@ namespace ScriptableObjects.Characters.Health
             CurrentHP = Mathf.Max(CurrentHP - damage, 0);
             OnDamage?.Invoke(this, elementType, damage);
             
-            if (CurrentHP == 0) Die();
+            if (CurrentHP == 0) Die(attacker);
         }
 
-        public void Revive(Character character, int amount)
+        public void Revive(Character character, HealthManager reviver, int amount)
         {
             CurrentHP = amount;
             isAlive = true;
-            OnRevive?.Invoke(character.UUID);
+            OnRevive?.Invoke(character.UUID, reviver);
         }
 
-        public void Heal(int amount)
+        public void Heal(Character character, Character healer, int amount)
         {
             if (!isAlive) return;
-            Debug.Log($"Healing {amount}/{MaxHP} HP");
             CurrentHP = Mathf.Min(CurrentHP + amount, MaxHP);
+            OnHealed?.Invoke(character, healer, amount);
         }
 
         public void ChangeSP(int amount)
@@ -191,10 +193,10 @@ namespace ScriptableObjects.Characters.Health
             activeBuffDebuffs.Clear();
         }
 
-        public void Die()
+        public void Die(HealthManager killer = null)
         {
             isAlive = false;
-            OnDeath?.Invoke(UUID);
+            OnDeath?.Invoke(UUID, killer);
         }
 
         public void ApplyBuffDebuff(BuffDebuff buffDebuff)
