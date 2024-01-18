@@ -16,32 +16,30 @@ namespace ScriptableObjects.Characters
         public string DisplayName;
         public Color Color;
         public CharacterStats Stats;
-        
+
         public InventoryItem weapon;
-        
+
         public List<BaseSkill> AvailableSkills;
         public bool IsPlayerCharacter;
         public GameObject prefab;
-        
-        public string UUID { get; private set; }
-        public HealthManager HealthManager { get; private set; }
 
-        private void OnValidate()
-        {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                name = ((Object)this).name;
-            }
-        }
-        
         public Character()
         {
             UUID = Guid.NewGuid().ToString();
         }
+
+        public string UUID { get; }
+        public HealthManager HealthManager { get; private set; }
+
         private void OnEnable()
         {
             HealthManager = CreateInstance<HealthManager>();
             HealthManager.InitStats(Stats, UUID);
+        }
+
+        private void OnValidate()
+        {
+            if (string.IsNullOrWhiteSpace(name)) name = ((Object)this).name;
         }
     }
 }

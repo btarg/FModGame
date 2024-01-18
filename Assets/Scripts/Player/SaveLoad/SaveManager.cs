@@ -10,7 +10,7 @@ namespace Player.SaveLoad
     public static class SaveManager
     {
         private static SaveObject saveObject;
-        
+
         // when getting the jsonPath, we should determine the file name based on the save slot stored in player prefs
         private static string jsonPath
         {
@@ -30,16 +30,20 @@ namespace Player.SaveLoad
                 SaveToFile();
                 return saveObject;
             }
+
             string json = File.ReadAllText(jsonPath);
             saveObject = JsonUtility.FromJson<SaveObject>(json);
 
-            Debug.Log($"Loaded from {jsonPath} at {DateTime.FromFileTimeUtc(saveObject.timestamp).ToString(CultureInfo.CurrentCulture)}");
+            Debug.Log(
+                $"Loaded from {jsonPath} at {DateTime.FromFileTimeUtc(saveObject.timestamp).ToString(CultureInfo.CurrentCulture)}");
             return saveObject;
         }
+
         public static void SaveAffinityLog(AffinityLogDictionary log)
         {
             saveObject.affinityLogDictionary = log;
         }
+
         public static void SaveInventory(PlayerInventory inventory)
         {
             saveObject.inventoryItems = inventory.inventoryItems;

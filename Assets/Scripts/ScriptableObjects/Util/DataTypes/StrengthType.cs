@@ -10,4 +10,3 @@ namespace ScriptableObjects.Util.DataTypes
         Nullify
     }
 }
-

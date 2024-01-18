@@ -17,6 +17,7 @@ namespace Player.UI
             healthText.enabled = true;
             healthText.text = health.ToString();
         }
+
         public void HideHealth()
         {
             healthText.enabled = false;

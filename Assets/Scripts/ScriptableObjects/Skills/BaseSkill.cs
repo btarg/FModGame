@@ -14,6 +14,7 @@ namespace ScriptableObjects.Skills
 
         public int MinDamage;
         public int MaxDamage;
+        public bool IsAffectedByATK;
 
         public SkillType skillType;
         public ElementType elementType; // for offensive skills
@@ -30,9 +31,16 @@ namespace ScriptableObjects.Skills
 
         public int GetDamage(Character character)
         {
-            int baseDamage = Random.Range(MinDamage, MaxDamage + 1);
+            int baseDamage = Random.Range(MinDamage - 1, MaxDamage + 1);
             // round damage with mod to the nearest integer
-            return Mathf.CeilToInt(baseDamage * character.Stats.ATK);
+            if (IsAffectedByATK)
+            {
+                return Mathf.CeilToInt(baseDamage * character.Stats.ATK);
+            }
+            else
+            {
+                return baseDamage;
+            }
         }
 
         public void Use(Character user, Character target)
@@ -59,20 +67,14 @@ namespace ScriptableObjects.Skills
                 case SkillType.Revive:
                     // Use the skill to revive
                     if (!target.HealthManager.isAlive)
-                    {
                         target.HealthManager.Revive(target, user.HealthManager, reviveAmount);
-                    }
                     break;
             }
+
             if (costsHP)
-            {
                 user.HealthManager.TakeDamage(user.HealthManager, cost, ElementType.Almighty);
-            }
             else
-            {
                 user.HealthManager.ChangeSP(-cost);
-            }
-            
         }
     }
 }

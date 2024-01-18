@@ -38,6 +38,9 @@ namespace Editor
                     skill.MinDamage = Mathf.RoundToInt(minDamage);
                     skill.MaxDamage = Mathf.RoundToInt(maxDamage);
                     EditorGUILayout.EndHorizontal();
+
+                    // Display IsAffectedByATK for Offensive skills
+                    skill.IsAffectedByATK = EditorGUILayout.ToggleLeft("Is Affected By ATK", skill.IsAffectedByATK);
                     break;
 
                 case SkillType.BuffDebuff:

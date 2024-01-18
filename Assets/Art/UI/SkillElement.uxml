@@ -1,4 +1,6 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance"
+         engine="UnityEngine.UIElements" editor="UnityEditor.UIElements"
+         noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <ui:Button text="Button" parse-escape-sequences="true" display-tooltip-when-elided="true" name="SkillButton" style="height: 75%; width: 75%; align-items: center; justify-content: flex-end; align-self: center; -unity-font: url(&apos;project://database/Assets/Art/Fonts/Expose-Regular.otf?fileID=12800000&amp;guid=b2abd7f459305b64e9f1287679d12152&amp;type=3#Expose-Regular&apos;); background-image: none; -unity-font-definition: url(&apos;project://database/Assets/Art/Fonts/Expose-Regular%20SDF.asset?fileID=11400000&amp;guid=0c276ebb0a2e32148a5bf837b7c01eb1&amp;type=2#Expose-Regular SDF&apos;); font-size: 48%;" />
 </ui:UXML>
 

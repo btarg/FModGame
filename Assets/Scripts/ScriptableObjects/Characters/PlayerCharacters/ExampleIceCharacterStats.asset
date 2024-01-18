@@ -17,11 +17,14 @@ MonoBehaviour:
   ATK: 1
   DEF: 0.1
   EVD: 0.1
+  VIT: 0
   Weaknesses: 00000000
   Strengths:
   - ElementType: 1
     StrengthType: 0
     ResistPercentage: 50
+  critDamageMultiplier: 2
+  XPDroppedOnDeath: 0
   currentXP: 0
   currentLevel: 0
   XPToLevelUp: 0

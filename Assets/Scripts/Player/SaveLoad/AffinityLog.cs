@@ -9,12 +9,13 @@ namespace Player.SaveLoad
 
         private static AffinityData GetOrCreateData(string characterName)
         {
-            var pair = log.dataByCharacter.Find(p => p.key == characterName);
+            AffinityKeyValuePair pair = log.dataByCharacter.Find(p => p.key == characterName);
             if (pair == null)
             {
                 pair = new AffinityKeyValuePair { key = characterName, value = new AffinityData() };
                 log.dataByCharacter.Add(pair);
             }
+
             return pair.value;
         }
 
@@ -41,10 +42,7 @@ namespace Player.SaveLoad
         public static void Load()
         {
             AffinityLogDictionary loaded = SaveManager.Load().affinityLogDictionary;
-            if (loaded != null)
-            {
-                log = loaded;
-            }
+            if (loaded != null) log = loaded;
         }
 
         public static void Save()

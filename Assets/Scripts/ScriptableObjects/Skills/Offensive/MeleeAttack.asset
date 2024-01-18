@@ -17,10 +17,12 @@ MonoBehaviour:
   onUsedMessage: 
   MinDamage: 5
   MaxDamage: 10
+  IsAffectedByATK: 1
   skillType: 0
   elementType: 3
   buffDebuff: {fileID: 0}
   cost: 0
+  costsHP: 0
   healAmount: 0
   spAmount: 0
   reviveAmount: 0

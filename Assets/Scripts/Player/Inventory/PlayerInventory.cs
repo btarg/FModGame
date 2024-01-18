@@ -6,30 +6,26 @@ namespace Player.Inventory
 {
     public class PlayerInventory
     {
-        public SerializableDictionary<InventoryItem, int> inventoryItems { get; }
         private PlayerController lastPlayerController;
-       
+
         public PlayerInventory(SerializableDictionary<InventoryItem, int> items)
         {
             inventoryItems = items;
         }
-        
+
+        public SerializableDictionary<InventoryItem, int> inventoryItems { get; }
+
         public void AddInventoryItem(InventoryItem item, int count)
         {
             // if already exists, add to the count, otherwise add a new entry
-            if (!inventoryItems.TryAdd(item, count))
-            {
-                inventoryItems[item] += count;
-            }
+            if (!inventoryItems.TryAdd(item, count)) inventoryItems[item] += count;
         }
+
         public void RemoveInventoryItem(InventoryItem item, int count = 1)
         {
             if (!inventoryItems.ContainsKey(item)) return;
             inventoryItems[item] -= count;
-            if (inventoryItems[item] <= 0)
-            {
-                inventoryItems.Remove(item);
-            }
+            if (inventoryItems[item] <= 0) inventoryItems.Remove(item);
         }
 
         public void UseItem(PlayerController playerController, InventoryItem item)
@@ -44,13 +40,10 @@ namespace Player.Inventory
                     break;
             }
         }
-        
+
         public void LoadInventoryItems(List<InventoryItem> items)
         {
-            foreach (var item in items)
-            {
-                AddInventoryItem(item, 1);
-            }
+            foreach (InventoryItem item in items) AddInventoryItem(item, 1);
         }
 
         private void UseItemListener(InventoryItem item)
