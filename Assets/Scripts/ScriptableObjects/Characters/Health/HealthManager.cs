@@ -27,7 +27,7 @@ namespace ScriptableObjects.Characters.Health
         public OnReviveEvent OnRevive = new();
         public OnStrengthEncounteredEvent OnStrengthEncountered = new();
         public OnWeaknessEncounteredEvent OnWeaknessEncountered = new();
-
+        
         private CharacterStats stats;
         private string UUID;
         public bool isGuarding { get; private set; }
@@ -56,14 +56,16 @@ namespace ScriptableObjects.Characters.Health
             guardingTurnsLeft = turns;
         }
 
-        public void InitStats(CharacterStats _stats, string _UUID)
+        public void InitStats(CharacterStats _stats, string _UUID, bool _isAlive = true)
         {
-            isAlive = true;
+            isAlive = _isAlive;
             stats = Instantiate(_stats);
             UUID = _UUID;
             // initialise max HP and SP
             MaxHP = stats.MaxHP;
             MaxSP = stats.MaxSP;
+            Debug.Log($"Initialised stats for {UUID} with HP: {MaxHP}, SP: {MaxSP}, ATK: {stats.ATK}, DEF: {stats.DEF}, EVD: {stats.EVD}, VIT: {stats.VIT}");
+            
         }
         // function to return current stats
         public CharacterStats GetCurrentStats()

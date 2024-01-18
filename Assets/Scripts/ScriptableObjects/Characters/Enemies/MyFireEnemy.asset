@@ -16,7 +16,7 @@ MonoBehaviour:
   DisplayName: Fire Enemy
   Color: {r: 1, g: 0.5372549, b: 0, a: 0}
   Stats: {fileID: 11400000, guid: e4d992caa714a21479c2425149cb4cba, type: 2}
-  weapon: {fileID: 0}
+  weapon: {fileID: 11400000, guid: 49642e376aaf04f4b8dd4cf033a10ae1, type: 2}
   AvailableSkills:
   - {fileID: 11400000, guid: a817c179c6460bd4a8a68edaf77de9f0, type: 2}
   IsPlayerCharacter: 0

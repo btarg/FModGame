@@ -43,9 +43,9 @@ namespace ScriptableObjects.Skills
             }
         }
 
-        public void Use(Character user, Character target)
+        public void Use(Character user, Character target, bool negateCost = false)
         {
-            Debug.Log($"{user.DisplayName} used {skillName} on {target.DisplayName}.");
+            Debug.Log($"{user.DisplayName} used {skillName} on {target.DisplayName}. SP left: {user.HealthManager.CurrentSP}");
             switch (skillType)
             {
                 case SkillType.Offensive:
@@ -71,6 +71,7 @@ namespace ScriptableObjects.Skills
                     break;
             }
 
+            if (negateCost) return;
             if (costsHP)
                 user.HealthManager.TakeDamage(user.HealthManager, cost, ElementType.Almighty);
             else

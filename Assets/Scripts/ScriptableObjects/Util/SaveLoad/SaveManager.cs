@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using Player.Inventory;
-using ScriptableObjects.Characters.Health;
+using ScriptableObjects.Stats.CharacterStats;
 using ScriptableObjects.Util.DataTypes;
 using UnityEngine;
 
-namespace Player.SaveLoad
+namespace ScriptableObjects.Util.SaveLoad
 {
     public static class SaveManager
     {
@@ -25,6 +24,7 @@ namespace Player.SaveLoad
 
         public static SaveObject Load()
         {
+            // Load the CharacterStats from the save file
             saveObject = new SaveObject();
             if (!File.Exists(jsonPath))
             {
@@ -36,8 +36,6 @@ namespace Player.SaveLoad
             string json = File.ReadAllText(jsonPath);
             saveObject = JsonUtility.FromJson<SaveObject>(json);
 
-            Debug.Log(
-                $"Loaded from {jsonPath} at {DateTime.FromFileTimeUtc(saveObject.timestamp).ToString(CultureInfo.CurrentCulture)}");
             return saveObject;
         }
 
@@ -46,14 +44,28 @@ namespace Player.SaveLoad
             saveObject.affinityLogDictionary = log;
         }
 
-        public static void SaveInventory(PlayerInventory inventory)
+        public static void SaveInventory(SerializableDictionary<InventoryItem, int> inventory)
         {
-            saveObject.inventoryItems = inventory.inventoryItems;
+            saveObject.inventoryItems = inventory;
         }
-        
-        public static void SaveHealthManager(string characterID, HealthManager healthManager)
+
+        public static void SaveStats(string characterID, CharacterStats characterStats)
         {
-            saveObject.characterHealths.Add(characterID, healthManager);
+            Debug.Log("Saving character");
+            // log some stats from this character
+            Debug.Log($"SP: {characterStats.SP}");
+
+            // save stats to file if a key doesn't exist
+            if (!saveObject.characterStats.statsByCharacter.Exists(pair => pair.characterID == characterID))
+            {
+                saveObject.characterStats.statsByCharacter.Add(new CharacterStatsKeyValuePair
+                    { characterID = characterID, stats = characterStats });
+            }
+            else
+            {
+                var pair = saveObject.characterStats.statsByCharacter.Find(pair => pair.characterID == characterID);
+                pair.stats = characterStats;
+            }
         }
 
         public static bool SaveToFile()

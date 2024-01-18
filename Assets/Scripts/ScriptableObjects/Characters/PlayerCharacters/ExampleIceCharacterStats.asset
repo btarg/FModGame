@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MaxHP: 100
   MaxSP: 100
-  HP: 0
-  SP: 0
-  ATK: 1
-  DEF: 0.1
+  HP: 100
+  SP: 100
+  ATK: 10
+  DEF: 0.25
   EVD: 0.1
-  VIT: 0
+  VIT: 0.25
   Weaknesses: 00000000
   Strengths:
   - ElementType: 1
@@ -28,8 +28,8 @@ MonoBehaviour:
   critDamageMultiplier: 2
   XPDroppedOnDeath: 0
   currentXP: 0
-  currentLevel: 0
-  XPToLevelUp: 0
+  currentLevel: 1
+  XPToLevelUp: 50
   HPIncreasePerLevel: 10
   SPIncreasePerLevel: 10
   ATKIncreasePerLevel: 5

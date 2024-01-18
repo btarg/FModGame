@@ -4,12 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using BeatDetection;
 using BeatDetection.DataStructures;
-using Player.SaveLoad;
 using Player.UI;
 using ScriptableObjects.Characters;
 using ScriptableObjects.Characters.Health;
 using ScriptableObjects.Skills;
 using ScriptableObjects.Util.DataTypes;
+using ScriptableObjects.Util.SaveLoad;
 using StateMachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -74,8 +74,7 @@ namespace Player.PlayerStates
         private SkillListUI skillList;
         public List<Character> turnOrder;
 
-        public BattleState(PlayerController _playerController, List<Character> _party, List<Character> _enemies,
-            bool isAmbush = false, int _arena = 1)
+        public BattleState(PlayerController _playerController, List<Character> _party, List<Character> _enemies, bool isAmbush = false, int _arena = 1)
         {
             currentArena = _arena;
             playerController = _playerController;
@@ -141,6 +140,8 @@ namespace Player.PlayerStates
 
                 foreach (ElementType weakness in AffinityLog.GetWeaknessesEncountered(character.characterID))
                     Debug.Log($"{character.characterID} is weak to {weakness}");
+
+                Debug.Log($"{playerCharacter} is level {playerCharacter.Stats.currentLevel}");
             }
 
             Debug.Log("Turn order: " + turnOrderString);
@@ -241,9 +242,12 @@ namespace Player.PlayerStates
                     
                     if (partyMember != null)
                     {
-                        // save characters to save file and set the character's stats to the current stats
-                        partyMember.Stats = character.HealthManager.GetCurrentStats();
-                        SaveManager.SaveHealthManager(character.characterID, character.HealthManager);
+                        // reinitialise stats with current stats
+                        var currentStats = character.HealthManager.GetCurrentStats();
+                        partyMember.HealthManager.InitStats(currentStats, character.UUID, character.HealthManager.isAlive);
+                        
+                        // save stats to save file
+                        SaveManager.SaveStats(character.characterID, currentStats);
                     }
                 }
                 else if (!character.HealthManager.isAlive)
@@ -270,7 +274,7 @@ namespace Player.PlayerStates
             battleCanvas.enabled = false;
             playerController.stateDrivenCamera.m_AnimatedTarget.SetBool(inBattle, false);
 
-            SaveManager.SaveInventory(playerController.playerInventory);
+            SaveManager.SaveInventory(playerController.playerInventory.inventoryItems);
             AffinityLog.Save();
             SaveManager.SaveToFile();
         }
@@ -424,10 +428,12 @@ namespace Player.PlayerStates
         private void PlayerUseSkill(BeatResult result = BeatResult.Good)
         {
             if (result != BeatResult.Missed && result != BeatResult.Mashed)
-                foreach (GameObject selectedTarget in selectedTargets)
+                for (int index = 0; index < selectedTargets.Count; index++)
                 {
+                    GameObject selectedTarget = selectedTargets[index];
                     Character targetCharacter = characterGameObjects.FirstOrDefault(x => x.Value == selectedTarget).Key;
-                    selectedSkill.Use(playerCharacter, targetCharacter);
+                    // only use cost on first target
+                    selectedSkill.Use(playerCharacter, targetCharacter, index > 0);
                 }
             else
                 Debug.Log("Missed the attack!");

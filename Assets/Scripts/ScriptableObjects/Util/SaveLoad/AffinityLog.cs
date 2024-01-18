@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using ScriptableObjects.Util.DataTypes;
 
-namespace Player.SaveLoad
+namespace ScriptableObjects.Util.SaveLoad
 {
     public static class AffinityLog
     {

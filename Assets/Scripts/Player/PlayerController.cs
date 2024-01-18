@@ -4,10 +4,10 @@ using BeatDetection.QTE;
 using Cinemachine;
 using Player.Inventory;
 using Player.PlayerStates;
-using Player.SaveLoad;
 using ScriptableObjects.Characters;
 using ScriptableObjects.Skills;
 using ScriptableObjects.Util.DataTypes;
+using ScriptableObjects.Util.SaveLoad;
 using StateMachine;
 using UnityEngine;
 using UnityEngine.Events;
@@ -86,7 +86,7 @@ namespace Player
             if (playerInput != null)
                 playerInput.Disable();
 
-            SaveManager.SaveInventory(playerInventory);
+            SaveManager.SaveInventory(playerInventory.inventoryItems);
         }
 
         public void UseSelectedSkill(BeatResult result)

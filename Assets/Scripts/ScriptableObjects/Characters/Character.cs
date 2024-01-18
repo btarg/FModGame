@@ -4,6 +4,7 @@ using ScriptableObjects.Characters.Health;
 using ScriptableObjects.Skills;
 using ScriptableObjects.Stats.CharacterStats;
 using ScriptableObjects.Util.DataTypes;
+using ScriptableObjects.Util.SaveLoad;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -18,7 +19,6 @@ namespace ScriptableObjects.Characters
         public CharacterStats Stats;
 
         public InventoryItem weapon;
-
         public List<BaseSkill> AvailableSkills;
         public bool IsPlayerCharacter;
         public GameObject prefab;
@@ -29,13 +29,29 @@ namespace ScriptableObjects.Characters
         }
 
         public string UUID { get; }
-        [HideInInspector]
-        public HealthManager HealthManager;
+        [HideInInspector] public HealthManager HealthManager;
 
-        private void OnEnable()
+        private void Awake()
         {
             HealthManager = CreateInstance<HealthManager>();
-            HealthManager.InitStats(Stats, UUID);
+            CharacterStats useStats = Stats;
+            var loadedSaveObject = SaveManager.Load();
+            if (loadedSaveObject.characterStats == null)
+            {
+                Debug.LogError("Null stats! Everybody panic!!");
+                loadedSaveObject.characterStats = new CharacterStatsDictionary();
+            }
+            // Look up the CharacterStats in the dictionary
+            foreach (var statsKeyValuePair in loadedSaveObject.characterStats.statsByCharacter)
+            {
+                if (statsKeyValuePair.characterID == characterID)
+                {
+                    useStats = statsKeyValuePair.stats;
+                    break;
+                }
+            }
+
+            HealthManager.InitStats(useStats, UUID);
         }
     }
 }
