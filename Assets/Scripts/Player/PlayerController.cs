@@ -43,8 +43,12 @@ namespace Player
             playerInput = new PlayerInput();
             stateMachine = new StateMachine<IState>();
 
-            if (!party.Contains(playerCharacter)) party.Add(playerCharacter);
-
+            if (!party.Contains(playerCharacter))
+            {
+                // order the party so that the player character is always first
+                party.Insert(0, playerCharacter);
+            }
+            
             // Register the callback for the BattleState input action
             playerInput.Debug.BattleState.performed += EnterBattleState;
 

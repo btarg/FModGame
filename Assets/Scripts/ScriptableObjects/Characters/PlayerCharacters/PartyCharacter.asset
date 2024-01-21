@@ -10,17 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5ddf7b4db15c6e9429afdaa006e96336, type: 3}
-  m_Name: MyCharacter
+  m_Name: PartyCharacter
   m_EditorClassIdentifier: 
-  characterID: gigachad
-  DisplayName: Ben
-  Color: {r: 0.05842829, g: 0.6862634, b: 0.9528302, a: 0}
-  Stats: {fileID: 11400000, guid: 68c5ec3f23482704f8a35bfc328a1b9e, type: 2}
+  characterID: partyguy
+  DisplayName: Second Party Member
+  Color: {r: 0.4522934, g: 0, b: 1, a: 0}
+  Stats: {fileID: 11400000, guid: fb5cc755b8519f04dab811c1cc3993a9, type: 2}
   weapon: {fileID: 11400000, guid: cd63beb5699595147a27f5d5d03a3299, type: 2}
   AvailableSkills:
-  - {fileID: 11400000, guid: aedeece218cd1444a89c3948a5879813, type: 2}
-  - {fileID: 11400000, guid: 12df987ba187c534cac4f4b4626121bd, type: 2}
-  - {fileID: 11400000, guid: 28aae8ec915844b4b9b673257f38e20c, type: 2}
+  - {fileID: 11400000, guid: a817c179c6460bd4a8a68edaf77de9f0, type: 2}
+  - {fileID: 11400000, guid: 5e6b55b050dadcf44ac4b779f03dcf0e, type: 2}
   IsPlayerCharacter: 1
   prefab: {fileID: 4115895661672177110, guid: a65f9e80e9260714d85417f54f754e63, type: 3}
   HealthManager: {fileID: 0}

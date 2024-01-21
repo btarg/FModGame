@@ -1546,12 +1546,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6982710322940165656, guid: a4f4053dd7c3e604cb7888adaed2443e, type: 3}
       propertyPath: party.Array.size
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6982710322940165656, guid: a4f4053dd7c3e604cb7888adaed2443e, type: 3}
       propertyPath: party.Array.data[0]
       value: 
-      objectReference: {fileID: 11400000, guid: a4961b9122ea2da4bac49ea05728d1c1, type: 2}
+      objectReference: {fileID: 11400000, guid: e465174bae991b14686c3a69c1455421, type: 2}
     - target: {fileID: 6982710322940165656, guid: a4f4053dd7c3e604cb7888adaed2443e, type: 3}
       propertyPath: inventoryItems.Array.size
       value: 1

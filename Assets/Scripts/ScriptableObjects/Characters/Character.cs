@@ -42,26 +42,38 @@ namespace ScriptableObjects.Characters
             
             CharacterStats useStats = CreateInstance<CharacterStats>();
             useStats.rawCharacterStats = rawCharacterStats;
-
+            
+            bool hasLoadedFromSave = false;
             if (loadFromSave)
             {
                 var loadedSaveObject = SaveManager.Load();
+                
                 if (loadedSaveObject.characterStats == null)
                 {
                     Debug.LogError("Null stats! Everybody panic!!");
                     loadedSaveObject.characterStats = new CharacterStatsDictionary();
                 }
                 // Look up the CharacterStats in the dictionary
-                foreach (var statsKeyValuePair in loadedSaveObject.characterStats.statsByCharacter)
+
+                if (loadedSaveObject.characterStats.statsByCharacter.Count > 0)
                 {
-                    if (statsKeyValuePair.characterID == characterID)
+                    foreach (var statsKeyValuePair in loadedSaveObject.characterStats.statsByCharacter)
                     {
-                        useStats.rawCharacterStats = statsKeyValuePair.stats;
-                        break;
+                        if (statsKeyValuePair.characterID == characterID)
+                        {
+                            Debug.Log($"Stats: HP: {statsKeyValuePair.stats.HP} SP: {statsKeyValuePair.stats.SP}");
+                            useStats.rawCharacterStats = statsKeyValuePair.stats;
+                            hasLoadedFromSave = true;
+                            break;
+                        }
                     }
                 }
+                else
+                {
+                    Debug.Log("No stats found!");
+                }
             }
-            HealthManager.InitStats(useStats, UUID);
+            HealthManager.InitStats(useStats, UUID, hasLoadedFromSave);
         }
     }
 }

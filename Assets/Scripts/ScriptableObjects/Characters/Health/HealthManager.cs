@@ -54,16 +54,26 @@ namespace ScriptableObjects.Characters.Health
         {
             isGuarding = true;
             guardingTurnsLeft = turns;
+            Debug.Log($"{UUID} is guarding for {turns} turns");
         }
 
-        public void InitStats(CharacterStats _stats, string _UUID, bool _isAlive = true)
+        public void InitStats(CharacterStats _stats, string _UUID, bool hasLoadedFromSave = false)
         {
-            isAlive = _isAlive;
             stats = Instantiate(_stats);
             UUID = _UUID;
             // initialise max HP and SP
             MaxHP = stats.MaxHP;
             MaxSP = stats.MaxSP;
+
+            // if stats weren't found in the save file, then the current HP and SP should default to max
+            if (!hasLoadedFromSave)
+            {
+                CurrentHP = MaxHP;
+                CurrentSP = MaxSP;
+            }
+            
+            isAlive = CurrentHP > 0;
+            
             Debug.Log($"Initialised stats for {UUID} with HP: {MaxHP}, SP: {MaxSP}, ATK: {stats.ATK}, DEF: {stats.DEF}, EVD: {stats.EVD}, VIT: {stats.VIT}");
             
         }
@@ -95,7 +105,11 @@ namespace ScriptableObjects.Characters.Health
             if (guardingTurnsLeft > 0)
             {
                 guardingTurnsLeft--;
-                if (guardingTurnsLeft == 0) isGuarding = false;
+                if (guardingTurnsLeft == 0)
+                {
+                    isGuarding = false;
+                    Debug.Log($"{UUID} is no longer guarding");
+                }
             }
 
             // get the duration of every buff/debuff and decrement it
