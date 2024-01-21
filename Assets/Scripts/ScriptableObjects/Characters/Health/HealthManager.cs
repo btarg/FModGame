@@ -5,6 +5,7 @@ using ScriptableObjects.Stats;
 using ScriptableObjects.Stats.CharacterStats;
 using ScriptableObjects.Stats.Modifiers;
 using ScriptableObjects.Util.DataTypes;
+using ScriptableObjects.Util.DataTypes.Stats;
 using UnityEngine;
 using UnityEngine.Events;
 using Random = UnityEngine.Random;
@@ -15,9 +16,7 @@ namespace ScriptableObjects.Characters.Health
     public class HealthManager : ScriptableObject
     {
         public bool isAlive = true;
-
-        public int MaxHP;
-        public int MaxSP;
+        
         private readonly List<BuffDebuff> activeBuffDebuffs = new();
 
         public OnDamagedEvent OnDamage = new();
@@ -34,6 +33,10 @@ namespace ScriptableObjects.Characters.Health
 
         public int guardingTurnsLeft { get; private set; }
 
+        // get the max HP and SP from the stats
+        public int MaxHP => stats.MaxHP;
+        public int MaxSP => stats.MaxSP;
+        
         public int CurrentHP
         {
             get => GetCurrentStat(StatType.HP);
@@ -61,9 +64,6 @@ namespace ScriptableObjects.Characters.Health
         {
             stats = Instantiate(_stats);
             UUID = _UUID;
-            // initialise max HP and SP
-            MaxHP = stats.MaxHP;
-            MaxSP = stats.MaxSP;
 
             // if stats weren't found in the save file, then the current HP and SP should default to max
             if (!hasLoadedFromSave)
@@ -186,7 +186,7 @@ namespace ScriptableObjects.Characters.Health
 
         public void ChangeSP(int amount)
         {
-            CurrentSP = Mathf.Max(Mathf.Min(CurrentSP + amount, MaxSP), 0);
+            CurrentSP = Mathf.Max(CurrentSP + amount, 0);
         }
 
         public void RemoveAllStatModifiers()

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ScriptableObjects.Stats.CharacterStats;
+using ScriptableObjects.Util.DataTypes.Stats;
 using UnityEngine;
 
 namespace ScriptableObjects.Util.DataTypes

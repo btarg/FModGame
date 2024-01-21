@@ -1,5 +1,6 @@
 using System;
 using ScriptableObjects.Util.DataTypes;
+using ScriptableObjects.Util.DataTypes.Stats;
 using UnityEngine;
 
 namespace ScriptableObjects.Stats.CharacterStats

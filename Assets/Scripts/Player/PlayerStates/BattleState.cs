@@ -223,12 +223,10 @@ namespace Player.PlayerStates
             foreach (Character character in allCharacters)
             {
                 HealthManager healthManager = character.HealthManager;
+                var currentStats = healthManager.GetCurrentStats();
                 Debug.Log(healthManager.isAlive
-                    ? $"{character.DisplayName} is alive"
+                    ? $"{character.DisplayName} survived with {currentStats.HP} HP and {currentStats.SP} SP"
                     : $"{character.DisplayName} is dead");
-
-                // Remove all stat modifiers from all characters outside of battle
-                healthManager.RemoveAllStatModifiers();
 
                 // Remove battle state listeners
                 healthManager.OnRevive.RemoveAllListeners();
@@ -236,20 +234,8 @@ namespace Player.PlayerStates
 
                 if (character.IsPlayerCharacter)
                 {
-                    // get the player characters from the party list and update their stats with the current stats from battle state
-                    Character partyMember =
-                        playerController.party.FirstOrDefault(c => c.characterID == character.characterID);
-                    if (partyMember == null) partyMember = playerOneCharacter;
-
-                    if (partyMember != null)
-                    {
-                        // reinitialise stats with current stats
-                        var currentStats = character.HealthManager.GetCurrentStats();
-                        partyMember.InitCharacter(currentStats, false);
-
-                        // save stats to save file
-                        SaveManager.SaveStats(character.characterID, currentStats);
-                    }
+                    // Save the character's stats
+                    SaveManager.SaveStats(character.characterID, currentStats);
                 }
                 else if (!character.HealthManager.isAlive)
                 {
@@ -259,6 +245,9 @@ namespace Player.PlayerStates
                         GivePlayersXP(partyMember, character);
                     }
                 }
+
+                // Remove all stat modifiers from all characters outside of battle
+                healthManager.RemoveAllStatModifiers();
             }
 
             // Remove all characters from the scene
@@ -351,12 +340,15 @@ namespace Player.PlayerStates
             Character deadCharacter = turnOrder.FirstOrDefault(c => c.UUID == uuid);
             if (deadCharacter != null)
             {
-                deadCharacters.Add(deadCharacter);
                 GameObject deadCharacterObject = GameObject.Find(uuid);
-                if (deadCharacterObject != null) Object.Destroy(deadCharacterObject);
+                if (deadCharacterObject != null && !deadCharacter.IsPlayerCharacter)
+                {
+                    Object.Destroy(deadCharacterObject);
+                    characterGameObjects.Remove(deadCharacter);
+                }
 
+                deadCharacters.Add(deadCharacter);
                 turnOrder.Remove(deadCharacter);
-                characterGameObjects.Remove(deadCharacter);
 
                 deadCharacter.HealthManager.OnRevive.RemoveListener(OnCharacterDeath);
                 Debug.Log($"{deadCharacter.DisplayName} has died! UUID: {deadCharacter.UUID}");
@@ -525,6 +517,23 @@ namespace Player.PlayerStates
             }
         }
 
+        private bool IsTargetable(Character character)
+        {
+            // Check if the selected skill is a revival skill
+            bool isRevivalSkill = selectedSkill.skillType == SkillType.Revive;
+
+            // If the selected skill is a revival skill, the character should be dead to be targetable
+            // If it's not, the character should be alive to be targetable
+            bool isAlive = character.HealthManager.isAlive;
+            if ((isRevivalSkill && !isAlive) || (!isRevivalSkill && isAlive))
+            {
+                return (selectedSkill.CanTargetAllies && character.IsPlayerCharacter) ||
+                       (selectedSkill.CanTargetEnemies && !character.IsPlayerCharacter);
+            }
+
+            return false;
+        }
+
         private void SelectSkill(BaseSkill skill)
         {
             if (skill == null)
@@ -539,32 +548,17 @@ namespace Player.PlayerStates
 
             if (selectedSkill.TargetsAll)
             {
-                List<GameObject> targetList = new();
-                if (selectedSkill.CanTargetEnemies)
-                    // add all enemies to list of targets
-                    targetList.AddRange(characterGameObjects.Where(c => !c.Key.IsPlayerCharacter).Select(c => c.Value));
-
-                if (selectedSkill.CanTargetAllies)
-                    // add all allies to list of targets
-                    targetList.AddRange(characterGameObjects.Where(c => c.Key.IsPlayerCharacter).Select(c => c.Value));
-
-                selectedTargets.AddRange(targetList);
-            }
-
-            // set selected target to the first enemy in the list if the current selected skill targets enemies
-            else if (selectedSkill.CanTargetEnemies)
-            {
-                selectedTargets.Insert(0, characterGameObjects.FirstOrDefault(c => !c.Key.IsPlayerCharacter).Value);
+                selectedTargets.AddRange(characterGameObjects.Where(c => IsTargetable(c.Key)).Select(c => c.Value));
             }
             else
             {
-                // otherwise set it to the player character
-                selectedTargets.Insert(0, characterGameObjects[playerOneCharacter]);
+                // if we are only targeting one character, we insert it at 0 and don't have any other list items
+                GameObject target = characterGameObjects.FirstOrDefault(c => IsTargetable(c.Key)).Value;
+                selectedTargets.Insert(0, target);
             }
-
+            
             UpdateHealthUIs();
             playerTurnState = PlayerBattleState.Targeting;
-            // enable the submit button when targeting
             playerInput.UI.Submit.Enable();
         }
 
@@ -637,16 +631,30 @@ namespace Player.PlayerStates
 
         private Dictionary<Character, GameObject> GetTargetableObjects()
         {
-            Dictionary<Character, GameObject> targetableObjects = new(characterGameObjects);
-            if (!selectedSkill.CanTargetEnemies)
-                foreach (KeyValuePair<Character, GameObject> characterGameObject in characterGameObjects)
-                    if (!characterGameObject.Key.IsPlayerCharacter)
-                        targetableObjects.Remove(characterGameObject.Key);
+            Dictionary<Character, GameObject> targetableObjects = new();
 
-            if (!selectedSkill.CanTargetAllies)
-                foreach (KeyValuePair<Character, GameObject> characterGameObject in characterGameObjects)
-                    if (characterGameObject.Key.IsPlayerCharacter)
-                        targetableObjects.Remove(characterGameObject.Key);
+            // Check if the selected skill is a revival skill
+            bool isRevivalSkill = selectedSkill.skillType == SkillType.Revive;
+
+            foreach (KeyValuePair<Character, GameObject> characterGameObject in characterGameObjects)
+            {
+                // If the skill is a revival skill, we can target dead characters
+                if (isRevivalSkill && deadCharacters.Contains(characterGameObject.Key))
+                {
+                    targetableObjects.Add(characterGameObject.Key, characterGameObject.Value);
+                }
+                // If the skill is not a revival skill, we can only target alive characters
+                else if (!isRevivalSkill && allCharacters.Contains(characterGameObject.Key))
+                {
+                    if ((!selectedSkill.CanTargetEnemies && !characterGameObject.Key.IsPlayerCharacter) ||
+                        (!selectedSkill.CanTargetAllies && characterGameObject.Key.IsPlayerCharacter))
+                    {
+                        continue;
+                    }
+
+                    targetableObjects.Add(characterGameObject.Key, characterGameObject.Value);
+                }
+            }
 
             return targetableObjects;
         }
@@ -702,8 +710,9 @@ namespace Player.PlayerStates
             deadCharacters.Remove(character);
             turnOrder.Add(character);
 
-            SpawnCharacter(character, ArenaManager.Instance.PlayerPositions[currentArena].Positions,
-                ArenaManager.Instance.EnemyPositions[currentArena].Positions, turnOrder.Count - 1);
+            Debug.Log($"{character.DisplayName} has been revived by {reviver}!");
+
+            // SpawnCharacter(character, ArenaManager.Instance.PlayerPositions[currentArena].Positions, ArenaManager.Instance.EnemyPositions[currentArena].Positions, turnOrder.Count - 1);
         }
     }
 }

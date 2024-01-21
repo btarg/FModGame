@@ -20,6 +20,7 @@ MonoBehaviour:
   AvailableSkills:
   - {fileID: 11400000, guid: a817c179c6460bd4a8a68edaf77de9f0, type: 2}
   - {fileID: 11400000, guid: 5e6b55b050dadcf44ac4b779f03dcf0e, type: 2}
+  - {fileID: 11400000, guid: 0131d0add8fd9d84487051c5a816fa87, type: 2}
   IsPlayerCharacter: 1
   prefab: {fileID: 4115895661672177110, guid: a65f9e80e9260714d85417f54f754e63, type: 3}
   HealthManager: {fileID: 0}

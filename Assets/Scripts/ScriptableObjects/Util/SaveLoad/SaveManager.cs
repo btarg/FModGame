@@ -5,6 +5,7 @@ using System.IO;
 using ScriptableObjects.Stats.CharacterStats;
 using ScriptableObjects.Util.DataTypes;
 using ScriptableObjects.Util.DataTypes.Inventory;
+using ScriptableObjects.Util.DataTypes.Stats;
 using UnityEngine;
 
 namespace ScriptableObjects.Util.SaveLoad

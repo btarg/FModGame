@@ -2,7 +2,7 @@
 using ScriptableObjects.Stats;
 using UnityEngine;
 
-namespace ScriptableObjects.Util.DataTypes
+namespace ScriptableObjects.Util.DataTypes.Stats
 {
     [Serializable]
     public class RawCharacterStats
@@ -53,12 +53,5 @@ namespace ScriptableObjects.Util.DataTypes
         [SerializeField] public float ATKIncreasePerLevel;
         [SerializeField] public float DEFIncreasePerLevel;
         [SerializeField] public float EVDIncreasePerLevel;
-
-        public RawCharacterStats()
-        {
-            // default to max for HP and SP on creation
-            HP = MaxHP;
-            SP = MaxSP;
-        }
-    }
+   }
 }

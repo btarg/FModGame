@@ -17,6 +17,7 @@ MonoBehaviour:
   onUsedMessage: 
   MinDamage: 6
   MaxDamage: 13
+  IsAffectedByATK: 0
   skillType: 2
   elementType: 0
   buffDebuff: {fileID: 0}
@@ -27,4 +28,4 @@ MonoBehaviour:
   reviveAmount: 0
   TargetsAll: 0
   CanTargetAllies: 1
-  CanTargetEnemies: 1
+  CanTargetEnemies: 0
