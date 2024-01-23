@@ -64,7 +64,7 @@ namespace Player.UI
                 skillButton.clicked += () =>
                 {
                     if (isShowing)
-                        playerController.SelectItem(inventoryItem);
+                        playerController.playerInventory.UseItem(playerController, inventoryItem);
                 };
             }
         }
@@ -80,6 +80,7 @@ namespace Player.UI
             listDocument.rootVisualElement.style.display = DisplayStyle.Flex;
             // focus the first button
             Button firstButton = listDocument.rootVisualElement.Q<Button>();
+            if (firstButton == null) return;
             firstButton.Focus();
             isShowing = true;
         }

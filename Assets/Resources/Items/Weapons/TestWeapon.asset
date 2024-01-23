@@ -17,5 +17,5 @@ MonoBehaviour:
     displayName: Test weapon
     description: test
     itemType: 0
-    skill: {fileID: 11400000, guid: eb5fd6ed6649a2f4b870e31efb89f290, type: 2}
+    skillID: MeleeAttack
     value: 0

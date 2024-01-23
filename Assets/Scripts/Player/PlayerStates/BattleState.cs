@@ -66,6 +66,8 @@ namespace Player.PlayerStates
 
         // Targeting system
         private PlayerBattleState playerTurnState;
+        private SkillListUI skillList;
+        public List<Character> turnOrder;
 
         private readonly float scrollDelay = 0.2f;
 
@@ -73,8 +75,7 @@ namespace Player.PlayerStates
         private int selectedTargetIndex;
         private List<GameObject> selectedTargets;
         private List<Transform> shuffledEnemyPositions;
-        private SkillListUI skillList;
-        public List<Character> turnOrder;
+        
         private InventoryItem selectedItem;
 
         public BattleState(PlayerController _playerController, List<Character> party, List<Character> enemies,
@@ -294,6 +295,7 @@ namespace Player.PlayerStates
             {
                 selectedItem = item;
                 SelectSkill(item.Skill);
+                Debug.Log($"Selected item: {selectedItem.displayName}");
             });
 
             foreach (Character character in allCharacters)
@@ -472,13 +474,13 @@ namespace Player.PlayerStates
                 {
                     if (selectedItem != null)
                     {
-                        playerController.SelectItem(selectedItem);
                         skillList.PopulateList(playerController.playerInventory);
+                        playerTurnState = PlayerBattleState.SelectingItem;
                     }
                     else
                     {
-                        playerController.SelectSkill(selectedSkill);
                         skillList.PopulateList(currentPlayerCharacter);
+                        playerTurnState = PlayerBattleState.SelectingSkill;
                     }
                     skillList.Show();
                 }
@@ -512,9 +514,15 @@ namespace Player.PlayerStates
             }
             else if (actionType == BattleActionType.Item)
             {
-                var playerInventory = playerController.playerInventory;
                 UpdateHealthUIs();
-                skillList.PopulateList(playerInventory);
+                skillList.PopulateList(playerController.playerInventory);
+                
+                if (playerController.playerInventory.IsEmpty())
+                {
+                    Debug.Log("No items to use!");
+                    GoBack();
+                    return;
+                }
                 skillList.Show();
                 playerTurnState = PlayerBattleState.SelectingItem;
             }

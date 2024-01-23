@@ -45,16 +45,21 @@ namespace Player.Inventory
             inventoryItems.Add(item, count);
         }
 
-        public void RemoveInventoryItem(InventoryItem item, int count = 1)
+        private void RemoveInventoryItem(InventoryItem toRemoveItem, int count = 1)
         {
-            // if an item exists reduce its count
-            if (inventoryItems.ContainsKey(item))
+            // if an item exists reduce its count (check by item id)
+            foreach (InventoryItem inventoryItem in inventoryItems.Keys)
             {
-                inventoryItems[item] -= count;
-                // if the count is 0, remove the item from the inventory
-                if (inventoryItems[item] == 0)
+                if (inventoryItem.id == toRemoveItem.id)
                 {
-                    inventoryItems.Remove(item);
+                    inventoryItems[inventoryItem] -= count;
+                    Debug.Log($"Removed {count} {inventoryItem.displayName} from inventory ({inventoryItems[inventoryItem]} remaining)");
+                    // if the count is 0, remove the item from the inventory
+                    if (inventoryItems[inventoryItem] == 0)
+                    {
+                        inventoryItems.Remove(inventoryItem);
+                    }
+                    return;
                 }
             }
         }
@@ -68,13 +73,11 @@ namespace Player.Inventory
             }
 
             lastPlayerController = playerController;
-            switch (item.itemType)
+            if (item.itemType is ItemType.ConsumableSkill)
             {
-                case ItemType.ConsumableSkill:
-                    lastPlayerController.SelectSkill(item.Skill);
-                    // when we use a skill, we need to remove it from the inventory
-                    lastPlayerController.PlayerUsedItemSkillEvent.AddListener(UseItemListener);
-                    break;
+                playerController.SelectItem(item);
+                // when we use a skill, we need to remove it from the inventory
+                playerController.PlayerUsedItemSkillEvent.AddListener(UseItemListener);
             }
         }
 
@@ -100,6 +103,11 @@ namespace Player.Inventory
                     lastPlayerController.PlayerUsedItemSkillEvent.RemoveListener(UseItemListener);
                 }
             }
+        }
+        
+        public bool IsEmpty()
+        {
+            return inventoryItems.Count <= 0;
         }
     }
 }
