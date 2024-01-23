@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
-using ScriptableObjects.Skills;
 using UnityEngine;
 
-namespace ScriptableObjects.Characters.PlayerCharacters
+namespace ScriptableObjects.Skills
 {
     public static class SkillManager
     {

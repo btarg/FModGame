@@ -1,5 +1,4 @@
-﻿using ScriptableObjects.Characters.PlayerCharacters;
-using ScriptableObjects.Skills;
+﻿using ScriptableObjects.Skills;
 using UnityEngine;
 
 namespace ScriptableObjects.Util.DataTypes.Inventory
