@@ -25,6 +25,7 @@ namespace Player.PlayerStates
         Waiting,
         SelectingAction,
         SelectingSkill,
+        SelectingItem,
         Targeting,
         Attacking
     }
@@ -289,6 +290,11 @@ namespace Player.PlayerStates
         private void SetupEventListeners()
         {
             playerController.SelectSkillEvent.AddListener(SelectSkill);
+            playerController.SelectItemEvent.AddListener(item =>
+            {
+                selectedItem = item;
+                SelectSkill(item.Skill);
+            });
 
             foreach (Character character in allCharacters)
             {
@@ -438,6 +444,9 @@ namespace Player.PlayerStates
                 Debug.Log("Missed the attack!");
 
             playerController.UseSelectedSkill(result, selectedItem);
+            
+            // if we have used an item, reset the selected item
+            selectedItem = null;
 
             playerStartedTurn = false;
             playerTurnState = PlayerBattleState.Waiting;
@@ -453,21 +462,31 @@ namespace Player.PlayerStates
                 selectedTargets.Clear();
                 UpdateHealthUIs();
                 
-                // go back to selecting action if we are selecting the attack skill or an item with a skill
-                if (selectedSkill == playerOneCharacter.weapon.Skill || selectedItem != null)
+                // go back to selecting action if we are selecting the attack skill
+                if (selectedSkill == playerOneCharacter.weapon.Skill)
                 {
                     playerTurnState = PlayerBattleState.SelectingAction;
+                    skillList.Hide();
                 }
                 else
                 {
-                    playerTurnState = PlayerBattleState.SelectingSkill;
-                    skillList.PopulateList(currentPlayerCharacter);
+                    if (selectedItem != null)
+                    {
+                        playerController.SelectItem(selectedItem);
+                        skillList.PopulateList(playerController.playerInventory);
+                    }
+                    else
+                    {
+                        playerController.SelectSkill(selectedSkill);
+                        skillList.PopulateList(currentPlayerCharacter);
+                    }
                     skillList.Show();
                 }
 
                 selectedSkill = null;
+                selectedItem = null;
             }
-            else if (isPlayerTurn && playerTurnState == PlayerBattleState.SelectingSkill && playerStartedTurn)
+            else if (isPlayerTurn && playerTurnState == PlayerBattleState.SelectingSkill || playerTurnState == PlayerBattleState.SelectingItem && playerStartedTurn)
             {
                 playerTurnState = PlayerBattleState.SelectingAction;
                 skillList.Hide();
@@ -494,27 +513,10 @@ namespace Player.PlayerStates
             else if (actionType == BattleActionType.Item)
             {
                 var playerInventory = playerController.playerInventory;
-
-                // TODO: replace this with an actual item selection menu
-
-                if (playerInventory.inventoryItems.Count < 1)
-                {
-                    GoBack();
-                    return;
-                }
-
-                var item = playerInventory.inventoryItems.First();
-                if (item.Key == null) return;
-
-                int count = playerInventory.inventoryItems[item.Key];
-                if (count < 1)
-                {
-                    GoBack();
-                    return;
-                }
-
-                playerController.playerInventory.UseItem(playerController, item.Key);
-                selectedItem = item.Key;
+                UpdateHealthUIs();
+                skillList.PopulateList(playerInventory);
+                skillList.Show();
+                playerTurnState = PlayerBattleState.SelectingItem;
             }
             else if (actionType == BattleActionType.Defend)
             {

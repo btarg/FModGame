@@ -22,7 +22,7 @@ namespace Player.Inventory
                 description = "This is a test item",
                 skillID = "MeleeAttack"
             };
-            AddInventoryItem(item, 3);
+            // AddInventoryItem(item, 3);
         }
 
         public SerializableDictionary<InventoryItem, int> inventoryItems { get; } = new();

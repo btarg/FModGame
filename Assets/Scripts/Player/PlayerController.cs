@@ -36,7 +36,8 @@ namespace Player
         public PlayerInventory playerInventory { get; private set; }
 
         public UnityEvent<BaseSkill> SelectSkillEvent { get; } = new();
-        public UnityEvent<BattleActionType> SelectActionEvent { get; } = new();
+        public UnityEvent<InventoryItem> SelectItemEvent { get; } = new();
+        
         public UnityEvent<BeatResult, InventoryItem> PlayerUsedItemSkillEvent { get; } = new();
         private void Awake()
         {
@@ -96,10 +97,9 @@ namespace Player
         {
             SelectSkillEvent?.Invoke(skill);
         }
-
-        public void SelectAction(BattleActionType action)
+        public void SelectItem(InventoryItem inventoryItem)
         {
-            SelectActionEvent?.Invoke(action);
+            SelectItemEvent?.Invoke(inventoryItem);
         }
 
         public void EnterExplorationState()
@@ -124,5 +124,7 @@ namespace Player
             // TODO: set these values based on the encounter
             stateMachine.SetState(new BattleState(this, party, enemies, true));
         }
+
+        
     }
 }

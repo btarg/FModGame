@@ -1,5 +1,7 @@
+using Player.Inventory;
 using ScriptableObjects.Characters;
 using ScriptableObjects.Skills;
+using ScriptableObjects.Util.DataTypes.Inventory;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -44,7 +46,28 @@ namespace Player.UI
                 };
             }
         }
+        // function to populate the list with inventory items which can be used as skills
+        public void PopulateList(PlayerInventory playerInventory)
+        {
+            listDocument.rootVisualElement.Clear();
 
+            foreach (InventoryItem inventoryItem in playerInventory.inventoryItems.Keys)
+            {
+                if (inventoryItem.itemType != ItemType.ConsumableSkill) continue;
+                TemplateContainer instance = listElementTemplate.Instantiate();
+                instance.name = inventoryItem.name;
+                listDocument.rootVisualElement.Add(instance);
+
+                Button skillButton = instance.Q<Button>("SkillButton");
+                int amount = playerInventory.inventoryItems[inventoryItem];
+                skillButton.text = $"{inventoryItem.displayName} ({amount})";
+                skillButton.clicked += () =>
+                {
+                    if (isShowing)
+                        playerController.SelectItem(inventoryItem);
+                };
+            }
+        }
 
         public void Hide()
         {
