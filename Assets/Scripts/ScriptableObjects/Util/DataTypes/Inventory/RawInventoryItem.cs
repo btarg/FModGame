@@ -1,6 +1,7 @@
 ﻿using System;
 using ScriptableObjects.Skills;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace ScriptableObjects.Util.DataTypes.Inventory
 {
@@ -18,6 +19,8 @@ namespace ScriptableObjects.Util.DataTypes.Inventory
     public class RawInventoryItem
     {
         [SerializeField]
+        public string id; // internal id
+        [SerializeField]
         public string displayName;
         [SerializeField]
         public string description;
@@ -26,7 +29,7 @@ namespace ScriptableObjects.Util.DataTypes.Inventory
 
         // if it's a weapon or buff/debuff, it will have a Skill associated with it
         [SerializeField]
-        public BaseSkill skill;
+        public string skillID;
         [SerializeField]
         public int value;
     }

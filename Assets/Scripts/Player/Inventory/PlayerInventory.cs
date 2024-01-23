@@ -14,23 +14,14 @@ namespace Player.Inventory
         public PlayerInventory(SerializableDictionary<RawInventoryItem, int> items)
         {
             LoadInventoryItems(items);
-            // for debugging, add a default item
-            var item = new RawInventoryItem();
-            item.itemType = ItemType.ConsumableSkill;
-            item.displayName = "Test Item";
-            item.description = "This is a test item";
-            item.skill = ScriptableObject.CreateInstance<BaseSkill>();
-            item.skill.skillName = "Test Skill";
-            item.skill.description = "This is a test skill";
-            item.skill.skillType = SkillType.Offensive;
-            item.skill.CanTargetEnemies = true;
-            item.skill.CanTargetAllies = true;
-            item.skill.TargetsAll = false;
-            item.skill.cost = 0;
-            item.skill.MaxDamage = 15;
-            item.skill.MinDamage = 5;
-            item.skill.IsAffectedByATK = true;
-            item.skill.elementType = ElementType.Phys;
+            RawInventoryItem item = new()
+            {
+                itemType = ItemType.ConsumableSkill,
+                id = "test_item",
+                displayName = "Test Item",
+                description = "This is a test item",
+                skillID = "MeleeAttack"
+            };
             AddInventoryItem(item, 3);
         }
 
@@ -42,10 +33,16 @@ namespace Player.Inventory
             InventoryItem item = ScriptableObject.CreateInstance<InventoryItem>();
             item.rawInventoryItem = rawItem;
             // then we check if the item is already in the inventory and just update the count if it is
-            if (!inventoryItems.TryAdd(item, count))
+            foreach (InventoryItem inventoryItem in inventoryItems.Keys)
             {
-                inventoryItems[item] += count;
+                if (inventoryItem.rawInventoryItem.id == rawItem.id)
+                {
+                    inventoryItems[inventoryItem] += count;
+                    return;
+                }
             }
+            // otherwise we add the item to the inventory
+            inventoryItems.Add(item, count);
         }
 
         public void RemoveInventoryItem(InventoryItem item, int count = 1)
@@ -74,7 +71,7 @@ namespace Player.Inventory
             switch (item.itemType)
             {
                 case ItemType.ConsumableSkill:
-                    lastPlayerController.SelectSkill(item.skill);
+                    lastPlayerController.SelectSkill(item.Skill);
                     // when we use a skill, we need to remove it from the inventory
                     lastPlayerController.PlayerUsedItemSkillEvent.AddListener(UseItemListener);
                     break;

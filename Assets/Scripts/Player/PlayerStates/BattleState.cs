@@ -197,8 +197,15 @@ namespace Player.PlayerStates
                     Debug.Log($"It's {currentPlayerCharacter.DisplayName}'s turn!");
                     playerStartedTurn = true;
                     playerTurnState = PlayerBattleState.SelectingAction;
+                    // if the player is dead, skip their turn
+                    if (!currentPlayerCharacter.HealthManager.isAlive)
+                    {
+                        Debug.Log($"{currentPlayerCharacter.DisplayName} is dead!");
+                        NextTurn();
+                        return;
+                    }
+                    
                     currentPlayerCharacter.HealthManager.OnTurnStart();
-
                     // Skip this turn if we are still guarding
                     if (currentPlayerCharacter.HealthManager.isGuarding)
                     {
@@ -445,10 +452,10 @@ namespace Player.PlayerStates
             {
                 selectedTargets.Clear();
                 UpdateHealthUIs();
-
-                if (selectedSkill == playerOneCharacter.weapon.skill)
+                
+                // go back to selecting action if we are selecting the attack skill or an item with a skill
+                if (selectedSkill == playerOneCharacter.weapon.Skill || selectedItem != null)
                 {
-                    // go back to selecting action if we are selecting the attack skill
                     playerTurnState = PlayerBattleState.SelectingAction;
                 }
                 else
@@ -475,7 +482,7 @@ namespace Player.PlayerStates
 
             if (actionType == BattleActionType.Attack)
             {
-                SelectSkill(playerOneCharacter.weapon.skill);
+                SelectSkill(playerOneCharacter.weapon.Skill);
             }
             else if (actionType == BattleActionType.Skill)
             {
@@ -595,6 +602,14 @@ namespace Player.PlayerStates
                 GoBack();
                 return;
             }
+            
+            // Cannot use revival skills if there are no dead party members
+            if (selectedSkill.skillType == SkillType.Revive && !deadCharacters.Intersect(playerController.party).Any())
+            {
+                Debug.Log("No dead characters to revive!");
+                GoBack();
+                return;
+            }
 
             playerTurnState = PlayerBattleState.Attacking;
 
@@ -675,8 +690,12 @@ namespace Player.PlayerStates
                 if (selectedTargetIndex < 0 || selectedTargetIndex >= targetableObjects.Count)
                     selectedTargetIndex = increment == 1 ? 0 : targetableObjects.Count - 1;
 
-                selectedTargets[0] = targetableObjects.Values.ElementAt(selectedTargetIndex);
-                Debug.Log("Selected target: " + selectedTargets[0].name);
+                if (selectedTargetIndex >= 0 && selectedTargetIndex < targetableObjects.Values.Count)
+                {
+                    selectedTargets[0] = targetableObjects.Values.ElementAt(selectedTargetIndex);
+                }
+                
+                // Debug.Log("Selected target: " + selectedTargets[0].name);
                 UpdateHealthUIs();
 
                 // Wait for a short delay before scrolling again

@@ -1,11 +1,14 @@
+using System;
 using ScriptableObjects.Characters;
 using ScriptableObjects.Stats.Modifiers;
 using ScriptableObjects.Util.DataTypes;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace ScriptableObjects.Skills
 {
     [CreateAssetMenu(fileName = "NewSkill", menuName = "Skill")]
+    [Serializable]
     public class BaseSkill : ScriptableObject
     {
         public string skillName;

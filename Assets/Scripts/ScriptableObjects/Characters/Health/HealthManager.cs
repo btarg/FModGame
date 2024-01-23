@@ -180,7 +180,7 @@ namespace ScriptableObjects.Characters.Health
         public void Heal(Character character, Character healer, int amount)
         {
             if (!isAlive) return;
-            CurrentHP = Mathf.Min(CurrentHP + amount, MaxHP);
+            CurrentHP = amount;
             OnHealed?.Invoke(character, healer, amount);
         }
 

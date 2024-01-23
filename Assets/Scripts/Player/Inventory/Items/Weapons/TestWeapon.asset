@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: TestWeapon
   m_EditorClassIdentifier: 
   rawInventoryItem:
+    id: test_weapon
     displayName: Test weapon
     description: test
     itemType: 0
