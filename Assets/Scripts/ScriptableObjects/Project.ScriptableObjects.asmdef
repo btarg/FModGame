@@ -1,7 +1,7 @@
 {
   "name": "Project.ScriptableObjects",
   "rootNamespace": "",
-  "references": [],
+  "references": ["GUID:006f956817ada3c489e0dd0539f7a208"],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

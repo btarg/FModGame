@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ScriptableObjects.Characters.AiStates;
 using ScriptableObjects.Characters.Health;
 using ScriptableObjects.Skills;
 using ScriptableObjects.Stats.CharacterStats;
@@ -7,7 +8,9 @@ using ScriptableObjects.Util.DataTypes;
 using ScriptableObjects.Util.DataTypes.Inventory;
 using ScriptableObjects.Util.DataTypes.Stats;
 using ScriptableObjects.Util.SaveLoad;
+using StateMachine;
 using UnityEngine;
+using UnityEngine.Events;
 using Object = UnityEngine.Object;
 
 namespace ScriptableObjects.Characters
@@ -25,36 +28,39 @@ namespace ScriptableObjects.Characters
         public bool IsPlayerCharacter;
         public GameObject prefab;
 
+        public StateMachine<IState> CharacterStateMachine { get; private set; } = new();
+        public UnityEvent NextTurnEvent { get; } = new();
+
         public Character()
         {
             UUID = Guid.NewGuid().ToString();
         }
 
+        private void Awake()
+        {
+            InitCharacter();
+        }
+
         public string UUID { get; }
         [HideInInspector] public HealthManager HealthManager;
 
-        private void Awake()
-        {
-            InitCharacter(Stats.rawCharacterStats);
-        }
-        public void InitCharacter(RawCharacterStats rawCharacterStats, bool loadFromSave = true)
+        public void InitCharacter(bool loadFromSave = true)
         {
             HealthManager = CreateInstance<HealthManager>();
-            
+
             CharacterStats useStats = CreateInstance<CharacterStats>();
-            useStats.rawCharacterStats = rawCharacterStats;
-            
+            useStats.rawCharacterStats = Stats.rawCharacterStats;
+
             bool hasLoadedFromSave = false;
             if (loadFromSave)
             {
                 var loadedSaveObject = SaveManager.Load();
-                
+
                 if (loadedSaveObject.characterStats == null)
                 {
                     Debug.LogError("Null stats! Everybody panic!!");
                     loadedSaveObject.characterStats = new CharacterStatsDictionary();
                 }
-                // Look up the CharacterStats in the dictionary
 
                 if (loadedSaveObject.characterStats.statsByCharacter.Count > 0)
                 {
@@ -62,7 +68,6 @@ namespace ScriptableObjects.Characters
                     {
                         if (statsKeyValuePair.characterID == characterID)
                         {
-                            Debug.Log($"Stats: HP: {statsKeyValuePair.stats.HP} SP: {statsKeyValuePair.stats.SP}");
                             useStats.rawCharacterStats = statsKeyValuePair.stats;
                             hasLoadedFromSave = true;
                             break;
@@ -74,7 +79,14 @@ namespace ScriptableObjects.Characters
                     Debug.Log("No stats found!");
                 }
             }
+            
             HealthManager.InitStats(useStats, UUID, hasLoadedFromSave);
+            
+            // log HP and SP
+            Debug.Log($"{DisplayName} has {HealthManager.CurrentHP} HP and {HealthManager.CurrentSP} SP");
+
+            CharacterStateMachine = new StateMachine<IState>();
+            CharacterStateMachine.SetState(new CharacterIdleState());
         }
     }
 }

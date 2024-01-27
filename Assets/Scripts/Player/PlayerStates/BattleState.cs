@@ -6,10 +6,12 @@ using BeatDetection;
 using BeatDetection.DataStructures;
 using Player.UI;
 using ScriptableObjects.Characters;
+using ScriptableObjects.Characters.AiStates;
 using ScriptableObjects.Characters.Health;
 using ScriptableObjects.Skills;
 using ScriptableObjects.Util.DataTypes;
 using ScriptableObjects.Util.DataTypes.Inventory;
+using ScriptableObjects.Util.DataTypes.Stats;
 using ScriptableObjects.Util.SaveLoad;
 using StateMachine;
 using UnityEngine;
@@ -43,31 +45,37 @@ namespace Player.PlayerStates
         private static readonly int cam = Animator.StringToHash("arenaCam");
         private static readonly int inBattle = Animator.StringToHash("inBattle");
         private static readonly int onHitAnimation = Animator.StringToHash("Hit");
-        public List<Character> allCharacters;
+        public List<Character> allCharacters = new();
         private Canvas battleCanvas;
-        private Dictionary<Character, GameObject> characterGameObjects;
+        private Dictionary<Character, GameObject> characterGameObjects = new();
 
         private readonly int currentArena;
 
-        private Character currentPlayerCharacter;
+        private Character currentCharacter;
         private int currentTurnIndex;
         public List<Character> deadCharacters;
         private List<Transform> enemyPositions;
 
         private bool isPlayerTurn;
         private bool isScrolling;
+        
         private readonly Character playerOneCharacter;
-
         private readonly PlayerController playerController;
-
+        private List<Character> party => playerController.party;
+        
+        private List<Character> enemies;
+        private bool isAmbush;
+        public List<Character> turnOrder;
+        
         private PlayerInput playerInput;
         private List<Transform> playerPositions;
+        
         private bool playerStartedTurn;
-
-        // Targeting system
+        private bool enemyStartedTurn;
+        private bool isWaitingForTurn;
+        
         private PlayerBattleState playerTurnState;
         private SkillListUI skillList;
-        public List<Character> turnOrder;
 
         private readonly float scrollDelay = 0.2f;
 
@@ -78,13 +86,20 @@ namespace Player.PlayerStates
         
         private InventoryItem selectedItem;
 
-        public BattleState(PlayerController _playerController, List<Character> party, List<Character> enemies,
-            bool isAmbush = false, int arena = 1)
+        private bool earlyExit = false;
+
+        public BattleState(PlayerController _playerController, List<Character> _enemies,
+            bool _isAmbush = false, int arena = 1)
         {
             currentArena = arena;
             playerController = _playerController;
             playerOneCharacter = Object.Instantiate(playerController.playerCharacter);
+            enemies = _enemies;
+            isAmbush = _isAmbush;
+        }
 
+        public void OnEnter()
+        {
             // Initialize the turn order with the player's party and the enemies
             turnOrder = new List<Character>();
             allCharacters = new List<Character>();
@@ -94,15 +109,23 @@ namespace Player.PlayerStates
             InitializeCharacters(party);
             InitializeCharacters(enemies);
 
+            // if all the players from the party in the turn order are dead then exit battle
+            if (!turnOrder.Exists(c => c.IsPlayerCharacter))
+            {
+                Debug.Log("No players are alive!");
+                earlyExit = true;
+                playerController.EnterExplorationState();
+                return;
+            }
+
             // If it's an ambush, the player's party goes first
             // Otherwise, the enemies go first
             currentTurnIndex = isAmbush ? 0 : party.Count;
-            currentPlayerCharacter = turnOrder[currentTurnIndex];
+            currentCharacter = turnOrder[currentTurnIndex];
             SetupEventListeners();
-        }
-
-        public void OnEnter()
-        {
+            
+            
+            
             // get the state driven camera and set the inBattle parameter to true
             playerController.stateDrivenCamera.m_AnimatedTarget.SetBool(inBattle, true);
 
@@ -112,7 +135,7 @@ namespace Player.PlayerStates
 
             // Set up UI buttons with skills
             skillList = battleCanvas.GetComponentInChildren<SkillListUI>();
-            skillList.PopulateList(currentPlayerCharacter);
+            skillList.PopulateList(currentCharacter);
             skillList.Hide();
 
 
@@ -130,6 +153,9 @@ namespace Player.PlayerStates
             SpawnCharacters(currentArena - 1);
 
             playerStartedTurn = false;
+            enemyStartedTurn = false;
+            isWaitingForTurn = false;
+            
             AffinityLog.Load();
 
             // TODO: entered the battle state, play animations and music
@@ -172,6 +198,12 @@ namespace Player.PlayerStates
 
         public void Tick()
         {
+            if (earlyExit) return;
+            if (currentCharacter == turnOrder[currentTurnIndex])
+                currentCharacter.CharacterStateMachine.Tick();
+            
+            if (isWaitingForTurn) return;
+            
             // If there are no more player characters, it's a defeat
             if (!turnOrder.Exists(c => c.IsPlayerCharacter))
             {
@@ -189,50 +221,55 @@ namespace Player.PlayerStates
                 return;
             }
 
-            currentPlayerCharacter = turnOrder[currentTurnIndex];
-            isPlayerTurn = currentPlayerCharacter.IsPlayerCharacter;
+            currentCharacter = turnOrder[currentTurnIndex];
+            isPlayerTurn = currentCharacter.IsPlayerCharacter;
+            if (!currentCharacter.HealthManager.isAlive)
+            {
+                Debug.Log($"{currentCharacter.DisplayName} is dead!");
+                NextTurn();
+                return;
+            }
+            // Skip this turn if we are still guarding
+            if (currentCharacter.HealthManager.isGuarding)
+            {
+                Debug.Log($"{currentCharacter.DisplayName} is still guarding!");
+                NextTurn();
+                return;
+            }
+            
             if (isPlayerTurn)
             {
                 if (!playerStartedTurn)
                 {
                     // Player has entered their turn
-                    Debug.Log($"It's {currentPlayerCharacter.DisplayName}'s turn!");
-                    playerStartedTurn = true;
+                    Debug.Log($"It's {currentCharacter.DisplayName}'s turn!");
                     playerTurnState = PlayerBattleState.SelectingAction;
-                    // if the player is dead, skip their turn
-                    if (!currentPlayerCharacter.HealthManager.isAlive)
-                    {
-                        Debug.Log($"{currentPlayerCharacter.DisplayName} is dead!");
-                        NextTurn();
-                        return;
-                    }
                     
-                    currentPlayerCharacter.HealthManager.OnTurnStart();
-                    // Skip this turn if we are still guarding
-                    if (currentPlayerCharacter.HealthManager.isGuarding)
-                    {
-                        Debug.Log($"{currentPlayerCharacter.DisplayName} is still guarding!");
-                        NextTurn();
-                    }
+                    currentCharacter.HealthManager.OnTurnStart();
+                    
+                    playerStartedTurn = true;
                 }
             }
             else
             {
-                // TODO: Handle enemy's turn
-                Debug.Log("It's the enemy's turn!");
-                // TODO: wait for enemy AI input
-                currentPlayerCharacter.HealthManager.OnTurnStart();
-                // for now we move to next turn straight away
-                NextTurn();
+                if (!enemyStartedTurn)
+                {
+                    enemyStartedTurn = true;
+                    // add a listener to the AI state machine to go to the next turn when we finish thinking
+                    currentCharacter.NextTurnEvent.AddListener(NextTurn);
+                    currentCharacter.CharacterStateMachine.SetState(new AIThinkingState(currentCharacter, turnOrder));
+                }
             }
+            isWaitingForTurn = true;
         }
 
         public void OnExit()
         {
+            
             foreach (Character character in allCharacters)
             {
                 HealthManager healthManager = character.HealthManager;
-                var currentStats = healthManager.GetCurrentStats();
+                RawCharacterStats currentStats = healthManager.GetCurrentStats();
                 Debug.Log(healthManager.isAlive
                     ? $"{character.DisplayName} survived with {currentStats.HP} HP and {currentStats.SP} SP"
                     : $"{character.DisplayName} is dead");
@@ -266,15 +303,18 @@ namespace Player.PlayerStates
             allCharacters.Clear();
             deadCharacters.Clear();
             turnOrder.Clear();
-            playerInput.Disable();
-            playerInput.Dispose();
-            battleCanvas.enabled = false;
+
+            if (!earlyExit)
+            {
+                playerInput.Disable();
+                playerInput.Dispose();
+                battleCanvas.enabled = false;
+                
+                SaveManager.SaveInventory(playerController.playerInventory.inventoryItems);
+                AffinityLog.Save();
+                SaveManager.SaveToFile();
+            }
             playerController.stateDrivenCamera.m_AnimatedTarget.SetBool(inBattle, false);
-
-            SaveManager.SaveInventory(playerController.playerInventory.inventoryItems);
-
-            AffinityLog.Save();
-            SaveManager.SaveToFile();
         }
 
         private void GivePlayersXP(Character partyMember, Character characterKilled)
@@ -344,8 +384,10 @@ namespace Player.PlayerStates
             foreach (Character character in characters)
             {
                 Character characterInstance = Object.Instantiate(character);
-                turnOrder.Add(characterInstance);
+                if (characterInstance.HealthManager.isAlive)
+                    turnOrder.Add(characterInstance);
                 allCharacters.Add(characterInstance);
+                character.CharacterStateMachine.SetState(new CharacterIdleState());
             }
         }
 
@@ -381,7 +423,6 @@ namespace Player.PlayerStates
 
         public void SpawnCharacters(int arena)
         {
-            characterGameObjects = new Dictionary<Character, GameObject>();
             // Ensure the arena number is valid
             if (arena < 0 || arena >= ArenaManager.Instance.PlayerPositions.Count ||
                 arena >= ArenaManager.Instance.EnemyPositions.Count)
@@ -479,7 +520,7 @@ namespace Player.PlayerStates
                     }
                     else
                     {
-                        skillList.PopulateList(currentPlayerCharacter);
+                        skillList.PopulateList(currentCharacter);
                         playerTurnState = PlayerBattleState.SelectingSkill;
                     }
                     skillList.Show();
@@ -508,7 +549,7 @@ namespace Player.PlayerStates
             else if (actionType == BattleActionType.Skill)
             {
                 UpdateHealthUIs();
-                skillList.PopulateList(currentPlayerCharacter);
+                skillList.PopulateList(currentCharacter);
                 skillList.Show();
                 playerTurnState = PlayerBattleState.SelectingSkill;
             }
@@ -528,7 +569,7 @@ namespace Player.PlayerStates
             }
             else if (actionType == BattleActionType.Defend)
             {
-                currentPlayerCharacter.HealthManager.StartGuarding(2);
+                currentCharacter.HealthManager.StartGuarding(2);
                 playerTurnState = PlayerBattleState.Waiting;
                 NextTurn();
             }
@@ -599,14 +640,14 @@ namespace Player.PlayerStates
 
             if (selectedSkill.costsHP)
             {
-                if (currentPlayerCharacter.HealthManager.CurrentHP < selectedSkill.cost)
+                if (currentCharacter.HealthManager.CurrentHP < selectedSkill.cost)
                 {
                     Debug.Log("Not enough HP!");
                     GoBack();
                     return;
                 }
             }
-            else if (currentPlayerCharacter.HealthManager.CurrentSP < selectedSkill.cost)
+            else if (currentCharacter.HealthManager.CurrentSP < selectedSkill.cost)
             {
                 Debug.Log("Not enough SP!");
                 GoBack();
@@ -720,9 +761,14 @@ namespace Player.PlayerStates
 
         private void NextTurn()
         {
+            currentCharacter.CharacterStateMachine.SetState(new CharacterIdleState());
+            
             // Increment the turn index, wrapping back to the start if it reaches the end of the list
             currentTurnIndex = (currentTurnIndex + 1) % turnOrder.Count;
             playerStartedTurn = false;
+            enemyStartedTurn = false;
+            isWaitingForTurn = false;
+            
             selectedTargets.Clear();
         }
 

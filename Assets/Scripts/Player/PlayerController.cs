@@ -122,7 +122,7 @@ namespace Player
             }
 
             // TODO: set these values based on the encounter
-            stateMachine.SetState(new BattleState(this, party, enemies, true));
+            stateMachine.SetState(new BattleState(this, enemies, true));
         }
 
         

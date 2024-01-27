@@ -9,6 +9,7 @@ namespace ScriptableObjects.Stats.CharacterStats
     [Serializable]
     public class CharacterStats : ScriptableObject
     {
+        [SerializeField]
         public RawCharacterStats rawCharacterStats;
         public int MaxHP => rawCharacterStats.MaxHP;
         public int MaxSP => rawCharacterStats.MaxSP;

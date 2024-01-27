@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: MyCharacterStats
   m_EditorClassIdentifier: 
   rawCharacterStats:
-    MaxHP: 20
+    MaxHP: 100
     MaxSP: 50
     HP: 0
     SP: 0

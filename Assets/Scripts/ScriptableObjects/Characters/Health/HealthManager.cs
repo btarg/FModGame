@@ -16,7 +16,7 @@ namespace ScriptableObjects.Characters.Health
     public class HealthManager : ScriptableObject
     {
         public bool isAlive = true;
-        
+
         private readonly List<BuffDebuff> activeBuffDebuffs = new();
 
         public OnDamagedEvent OnDamage = new();
@@ -26,7 +26,7 @@ namespace ScriptableObjects.Characters.Health
         public OnReviveEvent OnRevive = new();
         public OnStrengthEncounteredEvent OnStrengthEncountered = new();
         public OnWeaknessEncounteredEvent OnWeaknessEncountered = new();
-        
+
         private CharacterStats stats;
         private string UUID;
         public bool isGuarding { get; private set; }
@@ -36,17 +36,17 @@ namespace ScriptableObjects.Characters.Health
         // get the max HP and SP from the stats
         public int MaxHP => stats.MaxHP;
         public int MaxSP => stats.MaxSP;
-        
+
         public int CurrentHP
         {
             get => GetCurrentStat(StatType.HP);
-            private set => stats.HP = Mathf.Min(value, MaxHP);
+            private set => stats.HP = Mathf.Max(Mathf.Min(value, MaxHP), 0);
         }
 
         public int CurrentSP
         {
             get => GetCurrentStat(StatType.SP);
-            private set => stats.SP = Mathf.Min(value, MaxSP);
+            private set => stats.SP = Mathf.Max(Mathf.Min(value, MaxSP), 0);
         }
 
         public float CurrentDEF => GetCurrentStatFloat(StatType.DEF);
@@ -71,12 +71,13 @@ namespace ScriptableObjects.Characters.Health
                 CurrentHP = MaxHP;
                 CurrentSP = MaxSP;
             }
-            
+
             isAlive = CurrentHP > 0;
-            
-            Debug.Log($"Initialised stats for {UUID} with HP: {MaxHP}, SP: {MaxSP}, ATK: {stats.ATK}, DEF: {stats.DEF}, EVD: {stats.EVD}, VIT: {stats.VIT}");
-            
+
+            Debug.Log(
+                $"Initialised stats for {UUID} with HP: {MaxHP}, SP: {MaxSP}, ATK: {stats.ATK}, DEF: {stats.DEF}, EVD: {stats.EVD}, VIT: {stats.VIT}");
         }
+
         // function to return current stats
         public RawCharacterStats GetCurrentStats()
         {
@@ -186,7 +187,7 @@ namespace ScriptableObjects.Characters.Health
 
         public void ChangeSP(int amount)
         {
-            CurrentSP = Mathf.Max(CurrentSP + amount, 0);
+            CurrentSP += amount;
         }
 
         public void RemoveAllStatModifiers()

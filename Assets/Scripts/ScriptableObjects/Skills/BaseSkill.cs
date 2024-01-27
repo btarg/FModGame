@@ -36,18 +36,33 @@ namespace ScriptableObjects.Skills
         {
             int baseDamage = Random.Range(MinDamage - 1, MaxDamage + 1);
             // round damage with mod to the nearest integer
-            if (IsAffectedByATK)
-            {
-                return Mathf.CeilToInt(baseDamage * character.Stats.ATK);
-            }
-            else
-            {
-                return baseDamage;
-            }
+            return IsAffectedByATK ? Mathf.CeilToInt(baseDamage * character.Stats.ATK) : baseDamage;
         }
 
         public void Use(Character user, Character target, bool negateCost = false)
         {
+            if (!negateCost)
+            {
+                if (costsHP)
+                {
+                    if (user.HealthManager.CurrentHP - cost < 0)
+                    {
+                        Debug.Log($"{user.DisplayName} does not have enough HP!");
+                        return;
+                    }
+                    user.HealthManager.TakeDamage(user.HealthManager, cost, ElementType.Almighty);
+                }
+                else
+                {
+                    if (user.HealthManager.CurrentHP - cost < 0)
+                    {
+                        Debug.Log($"{user.DisplayName} does not have enough SP!");
+                        return;
+                    }
+                    user.HealthManager.ChangeSP(-cost);
+                }
+            }
+            
             switch (skillType)
             {
                 case SkillType.Offensive:
@@ -72,14 +87,8 @@ namespace ScriptableObjects.Skills
                         target.HealthManager.Revive(target, user.HealthManager, reviveAmount);
                     break;
             }
-
-            if (negateCost) return;
-            if (costsHP)
-                user.HealthManager.TakeDamage(user.HealthManager, cost, ElementType.Almighty);
-            else
-                user.HealthManager.ChangeSP(-cost);
             
-            Debug.Log($"{user.DisplayName} used {skillName} on {target.DisplayName}. SP left: {user.HealthManager.CurrentSP}");
+            Debug.Log($"{user.DisplayName} used {skillName} on {target.DisplayName} (costed {cost}). SP left: {user.HealthManager.CurrentSP} / {user.HealthManager.MaxSP}");
         }
     }
 }
