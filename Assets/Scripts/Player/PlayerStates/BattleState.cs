@@ -569,7 +569,7 @@ namespace Player.PlayerStates
             }
             else if (actionType == BattleActionType.Defend)
             {
-                currentCharacter.HealthManager.StartGuarding(2);
+                currentCharacter.HealthManager.StartGuarding(1);
                 playerTurnState = PlayerBattleState.Waiting;
                 NextTurn();
             }

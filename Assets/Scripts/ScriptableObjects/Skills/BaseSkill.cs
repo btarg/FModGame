@@ -39,7 +39,7 @@ namespace ScriptableObjects.Skills
             return IsAffectedByATK ? Mathf.CeilToInt(baseDamage * character.Stats.ATK) : baseDamage;
         }
 
-        public void Use(Character user, Character target, bool negateCost = false)
+        public bool Use(Character user, Character target, bool negateCost = false)
         {
             if (!negateCost)
             {
@@ -48,7 +48,7 @@ namespace ScriptableObjects.Skills
                     if (user.HealthManager.CurrentHP - cost < 0)
                     {
                         Debug.Log($"{user.DisplayName} does not have enough HP!");
-                        return;
+                        return false;
                     }
                     user.HealthManager.TakeDamage(user.HealthManager, cost, ElementType.Almighty);
                 }
@@ -57,7 +57,7 @@ namespace ScriptableObjects.Skills
                     if (user.HealthManager.CurrentHP - cost < 0)
                     {
                         Debug.Log($"{user.DisplayName} does not have enough SP!");
-                        return;
+                        return false;
                     }
                     user.HealthManager.ChangeSP(-cost);
                 }
@@ -75,7 +75,14 @@ namespace ScriptableObjects.Skills
                     break;
                 case SkillType.Heal:
                     // Use the skill to heal
-                    target.HealthManager.Heal(target, user, healAmount);
+                    if (target.HealthManager.isAlive)
+                    {
+                        target.HealthManager.Heal(target, user, healAmount);
+                    }
+                    else
+                    {
+                        return false;
+                    }
                     break;
                 case SkillType.ReplenishSP:
                     // Use the skill to replenish SP
@@ -84,11 +91,18 @@ namespace ScriptableObjects.Skills
                 case SkillType.Revive:
                     // Use the skill to revive
                     if (!target.HealthManager.isAlive)
+                    {
                         target.HealthManager.Revive(target, user.HealthManager, reviveAmount);
+                    }
+                    else
+                    {
+                        return false;
+                    }
                     break;
             }
             
             Debug.Log($"{user.DisplayName} used {skillName} on {target.DisplayName} (costed {cost}). SP left: {user.HealthManager.CurrentSP} / {user.HealthManager.MaxSP}");
+            return true;
         }
     }
 }
