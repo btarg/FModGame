@@ -7,14 +7,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="eb0068ff-5102-4473-a890-04716b11e196" name="Changes" comment="">
+    <list default="true" id="eb0068ff-5102-4473-a890-04716b11e196" name="Changes" comment="Predetermine battle layout">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.FModGame/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.FModGame/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/BattleBeatTest.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/BattleBeatTest.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Player/PlayerStates/BattleState.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Player/PlayerStates/BattleState.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/ScriptableObjects/Characters/Character.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/ScriptableObjects/Characters/Character.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/ScriptableObjects/Skills/BaseSkill.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/ScriptableObjects/Skills/BaseSkill.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/packages-lock.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,6 +47,8 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/3ea01e77be99618395f448b16bd7cc2bd4248bd9e5d8474964b2d97f39c5d74/System.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/BattleSystem/Arenas/SpawnMarker.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Player/Inventory/PlayerInventory.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock://E:/Unity Projects/FModGame/Assets/Scripts/Player/PlayerStates/BattleState.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://E:/Unity Projects/FModGame/Assets/Scripts/ScriptableObjects/Skills/BaseSkill.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/ScriptableObjects/Skills/SkillManager.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/ScriptableObjects/Util/SaveLoad/SaveManager.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/TextMesh Pro/Examples &amp; Extras/Scripts/WarpTextExample.cs" root0="FORCE_HIGHLIGHTING" />
@@ -241,7 +238,7 @@
       <workItem from="1706300558905" duration="11224000" />
       <workItem from="1706425343773" duration="43000" />
       <workItem from="1706432289960" duration="2902000" />
-      <workItem from="1707651646919" duration="7504000" />
+      <workItem from="1707651646919" duration="8391000" />
     </task>
     <task id="LOCAL-00001" summary="sorta working QTEs">
       <option name="closed" value="true" />
@@ -451,7 +448,23 @@
       <option name="project" value="LOCAL" />
       <updated>1705992234986</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="Predetermine battle layout">
+      <option name="closed" value="true" />
+      <created>1707660196285</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1707660196285</updated>
+    </task>
+    <task id="LOCAL-00028" summary="Predetermine battle layout">
+      <option name="closed" value="true" />
+      <created>1707660221288</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1707660221288</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -485,7 +498,8 @@
     <MESSAGE value="Item Skill List UI" />
     <MESSAGE value="Inventory item listeners" />
     <MESSAGE value="Reorganise ScriptableObjects" />
-    <option name="LAST_COMMIT_MESSAGE" value="Reorganise ScriptableObjects" />
+    <MESSAGE value="Predetermine battle layout" />
+    <option name="LAST_COMMIT_MESSAGE" value="Predetermine battle layout" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

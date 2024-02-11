@@ -45,11 +45,11 @@ namespace Player.PlayerStates
         private static readonly int cam = Animator.StringToHash("arenaCam");
         private static readonly int inBattle = Animator.StringToHash("inBattle");
         private static readonly int onHitAnimation = Animator.StringToHash("Hit");
-        public List<Character> allCharacters = new();
         private Canvas battleCanvas;
-        private List<GameObject> characterGameObjects = new();
 
         private readonly int currentArena;
+
+        private Dictionary<Character, GameObject> characterDictionary = new();
 
         private Character currentCharacter;
         private int currentTurnIndex;
@@ -100,9 +100,9 @@ namespace Player.PlayerStates
         {
             // Initialize the turn order with the player's party and the enemies
             turnOrder = new List<Character>();
-            allCharacters = new List<Character>();
+            characterDictionary = new Dictionary<Character, GameObject>();
             deadCharacters = new List<Character>();
-            
+
             // Initialize the characters
             InitializeCharacters(party);
             InitializeCharacters(enemies, false);
@@ -179,7 +179,7 @@ namespace Player.PlayerStates
             playerInput.Battle.Enable();
             playerInput.UI.Enable();
 
-            selectedTargets = new List<GameObject> { characterGameObjects.FirstOrDefault() };
+            selectedTargets = new();
             selectedTargetIndex = 0;
 
             playerInput.UI.Select.started += StartScrolling;
@@ -264,7 +264,7 @@ namespace Player.PlayerStates
 
         public void OnExit()
         {
-            foreach (Character character in allCharacters)
+            foreach (Character character in characterDictionary.Keys)
             {
                 HealthManager healthManager = character.HealthManager;
                 RawCharacterStats currentStats = healthManager.GetCurrentStats();
@@ -295,10 +295,9 @@ namespace Player.PlayerStates
             }
 
             // Remove all characters from the scene
-            foreach (GameObject c in characterGameObjects) Object.Destroy(c);
+            foreach (GameObject c in characterDictionary.Values) Object.Destroy(c);
             // clear all battle values
-            characterGameObjects.Clear();
-            allCharacters.Clear();
+            characterDictionary.Clear();
             deadCharacters.Clear();
             turnOrder.Clear();
 
@@ -337,7 +336,7 @@ namespace Player.PlayerStates
                 Debug.Log($"Selected item: {selectedItem.displayName}");
             });
 
-            foreach (Character character in allCharacters)
+            foreach (Character character in characterDictionary.Keys)
             {
                 character.HealthManager.OnRevive.AddListener(OnCharacterRevived);
                 character.HealthManager.OnDeath.AddListener(OnCharacterDeath);
@@ -354,7 +353,7 @@ namespace Player.PlayerStates
                     UpdateHealthUIs();
 
                     // animate damage
-                    GameObject characterGameObject = characterGameObjects.FirstOrDefault(x => x.name == character.UUID);
+                    GameObject characterGameObject = characterDictionary[character];
                     if (characterGameObject == null) return;
                     Animator animator = characterGameObject.GetComponentInChildren<Animator>();
                     if (animator != null) animator.SetTrigger(onHitAnimation);
@@ -383,24 +382,20 @@ namespace Player.PlayerStates
             foreach (Character character in characters)
             {
                 if (character == null) continue;
-                
+
                 Character characterInstance = Object.Instantiate(character);
-                // Generate a new UUID for each Character
                 characterInstance.UUID = Guid.NewGuid().ToString();
                 characterInstance.InitCharacter(loadFromSave);
-       
-                // Only alive characters can take turns
+
                 if (characterInstance.HealthManager.isAlive)
                     turnOrder.Add(characterInstance);
-                allCharacters.Add(characterInstance);
-                Debug.Log($"{characterInstance.DisplayName} initialized with UUID: {characterInstance.UUID}");
+                characterDictionary.Add(characterInstance, null);
 
-                // Set the player's character
                 if (characterInstance.characterID == playerController.playerCharacter.characterID)
                 {
                     playerOneCharacter = characterInstance;
                 }
-                
+
                 character.CharacterStateMachine.SetState(new CharacterIdleState());
             }
         }
@@ -411,11 +406,11 @@ namespace Player.PlayerStates
             Character deadCharacter = turnOrder.FirstOrDefault(c => c.UUID == uuid);
             if (deadCharacter != null)
             {
-                GameObject deadCharacterObject = GameObject.Find(uuid);
+                GameObject deadCharacterObject = characterDictionary[deadCharacter];
                 if (deadCharacterObject != null && !deadCharacter.IsPlayerCharacter)
                 {
                     Object.Destroy(deadCharacterObject);
-                    characterGameObjects.Remove(characterGameObjects.FirstOrDefault(x => x.name == uuid));
+                    characterDictionary[deadCharacter] = null;
                 }
 
                 deadCharacters.Add(deadCharacter);
@@ -450,9 +445,9 @@ namespace Player.PlayerStates
             enemyPositions = ArenaManager.Instance.EnemyPositions[arena].Positions;
 
             // Spawn characters
-            for (int i = 0; i < allCharacters.Count; i++)
+            for (int i = 0; i < characterDictionary.Keys.Count; i++)
             {
-                Character character = allCharacters[i];
+                Character character = characterDictionary.Keys.ElementAt(i);
                 List<Transform> positions = character.IsPlayerCharacter ? playerPositions : enemyPositions;
                 SpawnCharacter(character, positions, i);
             }
@@ -470,7 +465,9 @@ namespace Player.PlayerStates
 
             // Set the name to be the DisplayName plus a new UUID
             characterGameObject.name = characterToSpawn.UUID;
-            characterGameObjects.Add(characterGameObject);
+
+            // Add the GameObject to the dictionary with the corresponding Character instance as the key
+            characterDictionary[characterToSpawn] = characterGameObject;
         }
 
         private void PlayerUseSkill(BeatResult result = BeatResult.Good)
@@ -628,18 +625,22 @@ namespace Player.PlayerStates
 
         private void UpdateHealthUIs()
         {
-            foreach (GameObject target in characterGameObjects)
+            foreach (KeyValuePair<Character, GameObject> pair in characterDictionary)
             {
+                Character character = pair.Key;
+                GameObject target = pair.Value;
+
                 CharacterHealthUI characterHealthUI = target.GetComponentInChildren<CharacterHealthUI>();
                 if (!characterHealthUI) continue;
 
                 if (selectedTargets.Contains(target))
                 {
-                    Character character = allCharacters.FirstOrDefault(x => x.UUID == target.name);
-                    if (character != null) characterHealthUI.ShowHealth(character.HealthManager.CurrentHP);
+                    characterHealthUI.ShowHealth(character.HealthManager.CurrentHP);
                 }
                 else
+                {
                     characterHealthUI.HideHealth();
+                }
             }
         }
 
@@ -684,7 +685,7 @@ namespace Player.PlayerStates
         private void StartScrolling(InputAction.CallbackContext ctx)
         {
             if (playerTurnState != PlayerBattleState.Targeting || !playerStartedTurn ||
-                characterGameObjects.Count < 1 || isScrolling || selectedSkill.TargetsAll)
+                characterDictionary.Count < 1 || isScrolling || selectedSkill.TargetsAll)
                 return;
 
             isScrolling = true;
@@ -706,18 +707,8 @@ namespace Player.PlayerStates
 
         private Dictionary<Character, GameObject> GetTargetableObjects()
         {
-            Dictionary<Character, GameObject> targetableObjects = new();
-
-            foreach (GameObject characterGameObject in characterGameObjects)
-            {
-                Character character = allCharacters.FirstOrDefault(x => x.UUID == characterGameObject.name);
-                if (character == null) continue;
-                // If the skill is a revival skill, we can target dead characters
-                if (!IsTargetable(character)) continue;
-                if (character != null) targetableObjects.Add(character, characterGameObject);
-            }
-
-            return targetableObjects;
+            return characterDictionary.Where(pair =>
+                pair.Value != null && IsTargetable(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value);
         }
 
         private async void Scroll(Vector2 direction)
