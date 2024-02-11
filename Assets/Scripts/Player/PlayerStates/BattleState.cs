@@ -47,7 +47,7 @@ namespace Player.PlayerStates
         private static readonly int onHitAnimation = Animator.StringToHash("Hit");
         public List<Character> allCharacters = new();
         private Canvas battleCanvas;
-        private Dictionary<Character, GameObject> characterGameObjects = new();
+        private List<GameObject> characterGameObjects = new();
 
         private readonly int currentArena;
 
@@ -58,22 +58,22 @@ namespace Player.PlayerStates
 
         private bool isPlayerTurn;
         private bool isScrolling;
-        
-        private readonly Character playerOneCharacter;
+
+        private Character playerOneCharacter;
         private readonly PlayerController playerController;
         private List<Character> party => playerController.party;
-        
+
         private List<Character> enemies;
         private bool isAmbush;
         public List<Character> turnOrder;
-        
+
         private PlayerInput playerInput;
         private List<Transform> playerPositions;
-        
+
         private bool playerStartedTurn;
         private bool enemyStartedTurn;
         private bool isWaitingForTurn;
-        
+
         private PlayerBattleState playerTurnState;
         private SkillListUI skillList;
 
@@ -82,8 +82,7 @@ namespace Player.PlayerStates
         private BaseSkill selectedSkill;
         private int selectedTargetIndex;
         private List<GameObject> selectedTargets;
-        private List<Transform> shuffledEnemyPositions;
-        
+
         private InventoryItem selectedItem;
 
         private bool earlyExit = false;
@@ -93,7 +92,6 @@ namespace Player.PlayerStates
         {
             currentArena = arena;
             playerController = _playerController;
-            playerOneCharacter = Object.Instantiate(playerController.playerCharacter);
             enemies = _enemies;
             isAmbush = _isAmbush;
         }
@@ -104,10 +102,10 @@ namespace Player.PlayerStates
             turnOrder = new List<Character>();
             allCharacters = new List<Character>();
             deadCharacters = new List<Character>();
-
-            // Usage
+            
+            // Initialize the characters
             InitializeCharacters(party);
-            InitializeCharacters(enemies);
+            InitializeCharacters(enemies, false);
 
             // if all the players from the party in the turn order are dead then exit battle
             if (!turnOrder.Exists(c => c.IsPlayerCharacter))
@@ -123,9 +121,8 @@ namespace Player.PlayerStates
             currentTurnIndex = isAmbush ? 0 : party.Count;
             currentCharacter = turnOrder[currentTurnIndex];
             SetupEventListeners();
-            
-            
-            
+
+
             // get the state driven camera and set the inBattle parameter to true
             playerController.stateDrivenCamera.m_AnimatedTarget.SetBool(inBattle, true);
 
@@ -155,7 +152,7 @@ namespace Player.PlayerStates
             playerStartedTurn = false;
             enemyStartedTurn = false;
             isWaitingForTurn = false;
-            
+
             AffinityLog.Load();
 
             // TODO: entered the battle state, play animations and music
@@ -182,7 +179,7 @@ namespace Player.PlayerStates
             playerInput.Battle.Enable();
             playerInput.UI.Enable();
 
-            selectedTargets = new List<GameObject> { characterGameObjects.Values.FirstOrDefault() };
+            selectedTargets = new List<GameObject> { characterGameObjects.FirstOrDefault() };
             selectedTargetIndex = 0;
 
             playerInput.UI.Select.started += StartScrolling;
@@ -201,9 +198,9 @@ namespace Player.PlayerStates
             if (earlyExit) return;
             if (currentCharacter == turnOrder[currentTurnIndex])
                 currentCharacter.CharacterStateMachine.Tick();
-            
+
             if (isWaitingForTurn) return;
-            
+
             // If there are no more player characters, it's a defeat
             if (!turnOrder.Exists(c => c.IsPlayerCharacter))
             {
@@ -229,6 +226,7 @@ namespace Player.PlayerStates
                 NextTurn();
                 return;
             }
+
             // Skip this turn if we are still guarding
             if (currentCharacter.HealthManager.isGuarding)
             {
@@ -236,7 +234,7 @@ namespace Player.PlayerStates
                 NextTurn();
                 return;
             }
-            
+
             if (isPlayerTurn)
             {
                 if (!playerStartedTurn)
@@ -244,9 +242,9 @@ namespace Player.PlayerStates
                     // Player has entered their turn
                     Debug.Log($"It's {currentCharacter.DisplayName}'s turn!");
                     playerTurnState = PlayerBattleState.SelectingAction;
-                    
+
                     currentCharacter.HealthManager.OnTurnStart();
-                    
+
                     playerStartedTurn = true;
                 }
             }
@@ -260,12 +258,12 @@ namespace Player.PlayerStates
                     currentCharacter.CharacterStateMachine.SetState(new AIThinkingState(currentCharacter, turnOrder));
                 }
             }
+
             isWaitingForTurn = true;
         }
 
         public void OnExit()
         {
-            
             foreach (Character character in allCharacters)
             {
                 HealthManager healthManager = character.HealthManager;
@@ -297,7 +295,7 @@ namespace Player.PlayerStates
             }
 
             // Remove all characters from the scene
-            foreach (GameObject c in characterGameObjects.Values) Object.Destroy(c);
+            foreach (GameObject c in characterGameObjects) Object.Destroy(c);
             // clear all battle values
             characterGameObjects.Clear();
             allCharacters.Clear();
@@ -309,11 +307,12 @@ namespace Player.PlayerStates
                 playerInput.Disable();
                 playerInput.Dispose();
                 battleCanvas.enabled = false;
-                
+
                 SaveManager.SaveInventory(playerController.playerInventory.inventoryItems);
                 AffinityLog.Save();
                 SaveManager.SaveToFile();
             }
+
             playerController.stateDrivenCamera.m_AnimatedTarget.SetBool(inBattle, false);
         }
 
@@ -355,7 +354,7 @@ namespace Player.PlayerStates
                     UpdateHealthUIs();
 
                     // animate damage
-                    GameObject characterGameObject = characterGameObjects.FirstOrDefault(x => x.Key == character).Value;
+                    GameObject characterGameObject = characterGameObjects.FirstOrDefault(x => x.name == character.UUID);
                     if (characterGameObject == null) return;
                     Animator animator = characterGameObject.GetComponentInChildren<Animator>();
                     if (animator != null) animator.SetTrigger(onHitAnimation);
@@ -379,14 +378,29 @@ namespace Player.PlayerStates
             }
         }
 
-        private void InitializeCharacters(IEnumerable<Character> characters)
+        private void InitializeCharacters(IEnumerable<Character> characters, bool loadFromSave = true)
         {
             foreach (Character character in characters)
             {
+                if (character == null) continue;
+                
                 Character characterInstance = Object.Instantiate(character);
+                // Generate a new UUID for each Character
+                characterInstance.UUID = Guid.NewGuid().ToString();
+                characterInstance.InitCharacter(loadFromSave);
+       
+                // Only alive characters can take turns
                 if (characterInstance.HealthManager.isAlive)
                     turnOrder.Add(characterInstance);
                 allCharacters.Add(characterInstance);
+                Debug.Log($"{characterInstance.DisplayName} initialized with UUID: {characterInstance.UUID}");
+
+                // Set the player's character
+                if (characterInstance.characterID == playerController.playerCharacter.characterID)
+                {
+                    playerOneCharacter = characterInstance;
+                }
+                
                 character.CharacterStateMachine.SetState(new CharacterIdleState());
             }
         }
@@ -401,7 +415,7 @@ namespace Player.PlayerStates
                 if (deadCharacterObject != null && !deadCharacter.IsPlayerCharacter)
                 {
                     Object.Destroy(deadCharacterObject);
-                    characterGameObjects.Remove(deadCharacter);
+                    characterGameObjects.Remove(characterGameObjects.FirstOrDefault(x => x.name == uuid));
                 }
 
                 deadCharacters.Add(deadCharacter);
@@ -434,60 +448,51 @@ namespace Player.PlayerStates
             // Get the spawn positions for this arena
             playerPositions = ArenaManager.Instance.PlayerPositions[arena].Positions;
             enemyPositions = ArenaManager.Instance.EnemyPositions[arena].Positions;
-            shuffledEnemyPositions = Shuffle(enemyPositions);
 
-            for (int i = 0; i < turnOrder.Count; i++)
+            // Spawn characters
+            for (int i = 0; i < allCharacters.Count; i++)
             {
-                Character character = turnOrder[i];
-                SpawnCharacter(character, playerPositions, shuffledEnemyPositions, i);
+                Character character = allCharacters[i];
+                List<Transform> positions = character.IsPlayerCharacter ? playerPositions : enemyPositions;
+                SpawnCharacter(character, positions, i);
             }
         }
 
-        private void SpawnCharacter(Character characterToSpawn, List<Transform> _playerPositions,
-            List<Transform> _enemyPositions, int index)
+        private void SpawnCharacter(Character characterToSpawn, List<Transform> positions, int index)
         {
-            Transform spawnMarker = characterToSpawn.IsPlayerCharacter
-                ? _playerPositions[index]
-                :
-                // Use modulo to wrap around if there are more enemies than positions
-                _enemyPositions[index % enemyPositions.Count];
+            // Use the modulo operator to ensure the index is within the bounds of the list
+            index %= positions.Count;
+
+            Transform spawnMarker = positions[index];
+
             GameObject characterGameObject =
                 Object.Instantiate(characterToSpawn.prefab, spawnMarker.position, spawnMarker.rotation);
-            // associate this character with a GUID
+
+            // Set the name to be the DisplayName plus a new UUID
             characterGameObject.name = characterToSpawn.UUID;
-            characterGameObjects.Add(characterToSpawn, characterGameObject);
-        }
-
-        private List<Transform> Shuffle(List<Transform> toShuffle)
-        {
-            List<Transform> shuffled = new(toShuffle);
-            Random rng = new();
-            int n = shuffled.Count;
-            while (n > 1)
-            {
-                n--;
-                int k = rng.Next(n + 1);
-                (shuffled[k], shuffled[n]) = (shuffled[n], shuffled[k]);
-            }
-
-            return shuffled;
+            characterGameObjects.Add(characterGameObject);
         }
 
         private void PlayerUseSkill(BeatResult result = BeatResult.Good)
         {
             if (result != BeatResult.Missed && result != BeatResult.Mashed)
-                for (int index = 0; index < selectedTargets.Count; index++)
+            {
+                int index = 0;
+                foreach (var selectedTarget in selectedTargets)
                 {
-                    GameObject selectedTarget = selectedTargets[index];
-                    Character targetCharacter = characterGameObjects.FirstOrDefault(x => x.Value == selectedTarget).Key;
+                    var targets = GetTargetableObjects();
+                    Character targetCharacter = targets.FirstOrDefault(x => x.Value == selectedTarget).Key;
+
                     // only use cost on first target
                     selectedSkill.Use(playerOneCharacter, targetCharacter, index > 0);
+                    index++;
                 }
+            }
             else
                 Debug.Log("Missed the attack!");
 
             playerController.UseSelectedSkill(result, selectedItem);
-            
+
             // if we have used an item, reset the selected item
             selectedItem = null;
 
@@ -504,7 +509,7 @@ namespace Player.PlayerStates
             {
                 selectedTargets.Clear();
                 UpdateHealthUIs();
-                
+
                 // go back to selecting action if we are selecting the attack skill
                 if (selectedSkill == playerOneCharacter.weapon.Skill)
                 {
@@ -523,13 +528,15 @@ namespace Player.PlayerStates
                         skillList.PopulateList(currentCharacter);
                         playerTurnState = PlayerBattleState.SelectingSkill;
                     }
+
                     skillList.Show();
                 }
 
                 selectedSkill = null;
                 selectedItem = null;
             }
-            else if (isPlayerTurn && playerTurnState == PlayerBattleState.SelectingSkill || playerTurnState == PlayerBattleState.SelectingItem && playerStartedTurn)
+            else if (isPlayerTurn && playerTurnState == PlayerBattleState.SelectingSkill ||
+                     playerTurnState == PlayerBattleState.SelectingItem && playerStartedTurn)
             {
                 playerTurnState = PlayerBattleState.SelectingAction;
                 skillList.Hide();
@@ -557,13 +564,14 @@ namespace Player.PlayerStates
             {
                 UpdateHealthUIs();
                 skillList.PopulateList(playerController.playerInventory);
-                
+
                 if (playerController.playerInventory.IsEmpty())
                 {
                     Debug.Log("No items to use!");
                     GoBack();
                     return;
                 }
+
                 skillList.Show();
                 playerTurnState = PlayerBattleState.SelectingItem;
             }
@@ -583,13 +591,12 @@ namespace Player.PlayerStates
             // If the selected skill is a revival skill, the character should be dead to be targetable
             // If it's not, the character should be alive to be targetable
             bool isAlive = character.HealthManager.isAlive;
-            if ((isRevivalSkill && !isAlive) || (!isRevivalSkill && isAlive))
-            {
-                return (selectedSkill.CanTargetAllies && character.IsPlayerCharacter) ||
-                       (selectedSkill.CanTargetEnemies && !character.IsPlayerCharacter);
-            }
+            if ((isRevivalSkill && isAlive) || (!isRevivalSkill && !isAlive)) return false;
 
-            return false;
+            // Check if the character is an ally and if the skill can target allies
+            return character.IsPlayerCharacter && selectedSkill.CanTargetAllies ||
+                   // Check if the character is an enemy and if the skill can target enemies
+                   !character.IsPlayerCharacter && selectedSkill.CanTargetEnemies;
         }
 
         private void SelectSkill(BaseSkill skill)
@@ -604,17 +611,16 @@ namespace Player.PlayerStates
             selectedSkill = skill;
             selectedTargets.Clear();
 
-            if (selectedSkill.TargetsAll)
+            var targetableObjects = GetTargetableObjects().Values.ToList();
+            if (skill.TargetsAll)
             {
-                selectedTargets.AddRange(characterGameObjects.Where(c => IsTargetable(c.Key)).Select(c => c.Value));
+                selectedTargets.AddRange(targetableObjects);
             }
-            else
+            else if (targetableObjects.Count > 0)
             {
-                // if we are only targeting one character, we insert it at 0 and don't have any other list items
-                GameObject target = characterGameObjects.FirstOrDefault(c => IsTargetable(c.Key)).Value;
-                selectedTargets.Insert(0, target);
+                selectedTargets.Add(targetableObjects[0]);
             }
-            
+
             UpdateHealthUIs();
             playerTurnState = PlayerBattleState.Targeting;
             playerInput.UI.Submit.Enable();
@@ -622,13 +628,16 @@ namespace Player.PlayerStates
 
         private void UpdateHealthUIs()
         {
-            foreach (KeyValuePair<Character, GameObject> target in characterGameObjects)
+            foreach (GameObject target in characterGameObjects)
             {
-                CharacterHealthUI characterHealthUI = target.Value.GetComponentInChildren<CharacterHealthUI>();
+                CharacterHealthUI characterHealthUI = target.GetComponentInChildren<CharacterHealthUI>();
                 if (!characterHealthUI) continue;
 
-                if (selectedTargets.Contains(target.Value))
-                    characterHealthUI.ShowHealth(target.Key.HealthManager.CurrentHP);
+                if (selectedTargets.Contains(target))
+                {
+                    Character character = allCharacters.FirstOrDefault(x => x.UUID == target.name);
+                    if (character != null) characterHealthUI.ShowHealth(character.HealthManager.CurrentHP);
+                }
                 else
                     characterHealthUI.HideHealth();
             }
@@ -653,7 +662,7 @@ namespace Player.PlayerStates
                 GoBack();
                 return;
             }
-            
+
             // Cannot use revival skills if there are no dead party members
             if (selectedSkill.skillType == SkillType.Revive && !deadCharacters.Intersect(playerController.party).Any())
             {
@@ -699,27 +708,13 @@ namespace Player.PlayerStates
         {
             Dictionary<Character, GameObject> targetableObjects = new();
 
-            // Check if the selected skill is a revival skill
-            bool isRevivalSkill = selectedSkill.skillType == SkillType.Revive;
-
-            foreach (KeyValuePair<Character, GameObject> characterGameObject in characterGameObjects)
+            foreach (GameObject characterGameObject in characterGameObjects)
             {
+                Character character = allCharacters.FirstOrDefault(x => x.UUID == characterGameObject.name);
+                if (character == null) continue;
                 // If the skill is a revival skill, we can target dead characters
-                if (isRevivalSkill && deadCharacters.Contains(characterGameObject.Key))
-                {
-                    targetableObjects.Add(characterGameObject.Key, characterGameObject.Value);
-                }
-                // If the skill is not a revival skill, we can only target alive characters
-                else if (!isRevivalSkill && allCharacters.Contains(characterGameObject.Key))
-                {
-                    if ((!selectedSkill.CanTargetEnemies && !characterGameObject.Key.IsPlayerCharacter) ||
-                        (!selectedSkill.CanTargetAllies && characterGameObject.Key.IsPlayerCharacter))
-                    {
-                        continue;
-                    }
-
-                    targetableObjects.Add(characterGameObject.Key, characterGameObject.Value);
-                }
+                if (!IsTargetable(character)) continue;
+                if (character != null) targetableObjects.Add(character, characterGameObject);
             }
 
             return targetableObjects;
@@ -733,6 +728,12 @@ namespace Player.PlayerStates
             {
                 int increment = direction.x < 0 || direction.y > 0 ? -1 : 1;
 
+                // If the direction is up or down, adjust the increment to move vertically
+                if (direction.y != 0)
+                {
+                    increment *= enemyPositions.Count;
+                }
+
                 selectedTargetIndex += increment;
                 while (selectedTargetIndex >= 0 && selectedTargetIndex < targetableObjects.Count &&
                        targetableObjects.Values.ElementAt(selectedTargetIndex) == null)
@@ -745,7 +746,7 @@ namespace Player.PlayerStates
                 {
                     selectedTargets[0] = targetableObjects.Values.ElementAt(selectedTargetIndex);
                 }
-                
+
                 // Debug.Log("Selected target: " + selectedTargets[0].name);
                 UpdateHealthUIs();
 
@@ -762,13 +763,13 @@ namespace Player.PlayerStates
         private void NextTurn()
         {
             currentCharacter.CharacterStateMachine.SetState(new CharacterIdleState());
-            
+
             // Increment the turn index, wrapping back to the start if it reaches the end of the list
             currentTurnIndex = (currentTurnIndex + 1) % turnOrder.Count;
             playerStartedTurn = false;
             enemyStartedTurn = false;
             isWaitingForTurn = false;
-            
+
             selectedTargets.Clear();
         }
 
@@ -786,8 +787,6 @@ namespace Player.PlayerStates
             turnOrder.Add(character);
 
             Debug.Log($"{character.DisplayName} has been revived by {reviver}!");
-
-            // SpawnCharacter(character, ArenaManager.Instance.PlayerPositions[currentArena].Positions, ArenaManager.Instance.EnemyPositions[currentArena].Positions, turnOrder.Count - 1);
         }
     }
 }

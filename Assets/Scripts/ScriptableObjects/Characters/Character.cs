@@ -6,12 +6,10 @@ using ScriptableObjects.Skills;
 using ScriptableObjects.Stats.CharacterStats;
 using ScriptableObjects.Util.DataTypes;
 using ScriptableObjects.Util.DataTypes.Inventory;
-using ScriptableObjects.Util.DataTypes.Stats;
 using ScriptableObjects.Util.SaveLoad;
 using StateMachine;
 using UnityEngine;
 using UnityEngine.Events;
-using Object = UnityEngine.Object;
 
 namespace ScriptableObjects.Characters
 {
@@ -31,23 +29,13 @@ namespace ScriptableObjects.Characters
         public StateMachine<IState> CharacterStateMachine { get; private set; } = new();
         public UnityEvent NextTurnEvent { get; } = new();
 
-        public Character()
-        {
-            UUID = Guid.NewGuid().ToString();
-        }
-
-        private void Awake()
-        {
-            InitCharacter();
-        }
-
-        public string UUID { get; }
+        public string UUID;
         [HideInInspector] public HealthManager HealthManager;
 
         public void InitCharacter(bool loadFromSave = true)
         {
             HealthManager = CreateInstance<HealthManager>();
-
+            
             CharacterStats useStats = CreateInstance<CharacterStats>();
             useStats.rawCharacterStats = Stats.rawCharacterStats;
 

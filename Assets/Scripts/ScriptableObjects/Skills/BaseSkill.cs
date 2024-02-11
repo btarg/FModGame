@@ -41,6 +41,12 @@ namespace ScriptableObjects.Skills
 
         public bool Use(Character user, Character target, bool negateCost = false)
         {
+            if (user == null || user.HealthManager == null || target == null || target.HealthManager == null)
+            {
+                Debug.LogError("User or target is null!");
+                return false;
+            }
+            
             if (!negateCost)
             {
                 if (costsHP)
